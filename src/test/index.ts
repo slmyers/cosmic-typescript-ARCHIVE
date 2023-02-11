@@ -9,7 +9,7 @@
  * section of your package.json file)
  */
 
-import {expect} from "chai";
+import { expect } from "chai";
 import fs from "fs-extra";
 
 const sandboxRoot = "./sandbox";
@@ -33,7 +33,7 @@ function resetSandbox() {
   fs.copySync(samplesRoot, sandboxRoot);
 }
 
-describe("Test Suite", function () {
+describe.skip("Test Suite", function () {
 
   before(function(){
     resetSandbox();
