@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { inject, singleton } from 'tsyringe';
 import dotenv from 'dotenv';
 import { DataSource, QueryRunner } from 'typeorm';
 import path from 'path';
@@ -30,16 +31,36 @@ const wrap = (originalQueryRunner: QueryRunner): QueryRunnerWrapper => {
     return originalQueryRunner as QueryRunnerWrapper;
 };
 
+@singleton()
 export class TransactionalTestContext {
     private queryRunner: QueryRunnerWrapper | null = null;
     private originQueryRunnerFunction: any;
-    constructor(private readonly connection: DataSource) {}
+    private ready: any;
+    constructor(@inject('DataSource') private readonly connection: DataSource) {
+        this.ready = this.init().catch(() => {
+            throw new Error('Could not initialize database connection');
+        });
+    }
+
+    private async init(): Promise<void> {
+        if (this.ready) {
+            return;
+        }
+        return new Promise((resolve) => {
+            return this.connection
+                .initialize()
+                .then(() => this.connection.runMigrations())
+                .then(() => resolve());
+        });
+    }
 
     get manager() {
         return this.connection.manager;
     }
 
     async start(): Promise<void> {
+        await this.ready;
+
         if (this.queryRunner) {
             throw new Error('Context already started');
         }
@@ -92,40 +113,3 @@ export class TransactionalTestContext {
         }
     }
 }
-
-class TransactionalTestContextManager {
-    private static instance: TransactionalTestContextManager;
-
-    private contexts: Map<DataSource, TransactionalTestContext> = new Map();
-
-    static getInstance(): TransactionalTestContextManager {
-        if (!TransactionalTestContextManager.instance) {
-            TransactionalTestContextManager.instance =
-                new TransactionalTestContextManager();
-        }
-
-        return TransactionalTestContextManager.instance;
-    }
-
-    async getContext(
-        connection: DataSource,
-    ): Promise<TransactionalTestContext> {
-        if (!this.contexts.has(connection)) {
-            await connection.initialize();
-            await connection.runMigrations();
-            this.contexts.set(
-                connection,
-                new TransactionalTestContext(connection),
-            );
-        }
-
-        return this.contexts.get(connection) as TransactionalTestContext;
-    }
-}
-
-// enforce singleton
-export const transactionalContext = {
-    get: TransactionalTestContextManager.getInstance().getContext.bind(
-        TransactionalTestContextManager.getInstance(),
-    ),
-};

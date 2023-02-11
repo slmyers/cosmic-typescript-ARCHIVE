@@ -2,9 +2,9 @@
     "include": ["src/**/*", "migrations/**/*", "packages/**/*"],
     "exclude": ["node_modules"],
     "compilerOptions": {
-        "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "target": "es2017",
+        "emitDecoratorMetadata": true,
+        "target": "es2016",
         "module": "commonjs",
         "lib": ["es2020"],
         "outDir": "./build",

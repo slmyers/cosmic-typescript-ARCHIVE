@@ -1,14 +1,19 @@
 import { expect } from 'chai';
 import { BatchEntity } from '$batch/model';
 import { SqliteDataSource } from '$lib/datasource';
-import { TransactionalTestContext, transactionalContext } from '$test/setup';
+import { TransactionalTestContext } from '$test/setup';
+import { container } from 'tsyringe';
 
 describe('Batch ORM', function () {
     let batch: BatchEntity;
     let ctx: TransactionalTestContext;
 
-    this.beforeAll(async function () {
-        ctx = await transactionalContext.get(SqliteDataSource);
+    this.beforeAll(function () {
+        container.register('DataSource', { useValue: SqliteDataSource });
+    });
+
+    this.afterAll(function () {
+        container.reset();
     });
 
     this.beforeEach(async function () {
@@ -18,6 +23,7 @@ describe('Batch ORM', function () {
             20,
             new Date(2020, 1, 1),
         );
+        ctx = container.resolve(TransactionalTestContext);
         await ctx.start();
     });
 
