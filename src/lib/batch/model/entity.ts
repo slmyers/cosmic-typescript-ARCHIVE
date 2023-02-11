@@ -8,11 +8,11 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { DomainBatch } from './domain';
-import { OrderLine } from '../OrderLine';
+import { BatchDomain } from './domain';
+import { OrderLineEntity } from '$orderline/model';
 
 @Entity({ name: 'batch' })
-export class Batch extends DomainBatch {
+export class BatchEntity extends BatchDomain {
     @PrimaryGeneratedColumn()
     id!: number;
 
@@ -35,8 +35,8 @@ export class Batch extends DomainBatch {
     @UpdateDateColumn()
     readonly modified!: Date;
 
-    @OneToMany(() => OrderLine, (orderLine) => orderLine.batchId)
-    orderLines!: OrderLine[];
+    @OneToMany(() => OrderLineEntity, (orderLine) => orderLine.batchId)
+    orderLines!: OrderLineEntity[];
 
     constructor(reference: string, sku: string, qty: number, eta: Date) {
         super(reference, sku, qty, eta);

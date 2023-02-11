@@ -1,9 +1,10 @@
 import { expect } from 'chai';
-import { Batch, SqliteDataSource } from '$/lib';
-import { TransactionalTestContext, transactionalContext } from '$test/setup.js';
+import { BatchEntity } from '$batch/model';
+import { SqliteDataSource } from '$lib/datasource';
+import { TransactionalTestContext, transactionalContext } from '$test/setup';
 
 describe('Batch ORM', function () {
-    let batch: Batch;
+    let batch: BatchEntity;
     let ctx: TransactionalTestContext;
 
     this.beforeAll(async function () {
@@ -11,7 +12,12 @@ describe('Batch ORM', function () {
     });
 
     this.beforeEach(async function () {
-        batch = new Batch('batch-001', 'SMALL-TABLE', 20, new Date(2020, 1, 1));
+        batch = new BatchEntity(
+            'batch-001',
+            'SMALL-TABLE',
+            20,
+            new Date(2020, 1, 1),
+        );
         await ctx.start();
     });
 
@@ -21,10 +27,10 @@ describe('Batch ORM', function () {
 
     it('can save a batch', async function () {
         const res = await ctx.manager.save(batch);
-        const result = await ctx.manager.findOne(Batch, {
+        const result = await ctx.manager.findOne(BatchEntity, {
             where: { reference: 'batch-001' },
         });
         expect(result).to.exist;
-        expect(res?.equals(result as Batch)).to.equal(true);
+        expect(res?.equals(result as BatchEntity)).to.equal(true);
     });
 });

@@ -36,7 +36,10 @@
             "@/*": ["packages/*"],
             "$/*": ["src/*"],
             "$cli/*": ["src/cli/*"],
-            "$test/*": ["src/test/*"]
+            "$test/*": ["src/test/*"],
+            "$batch/*": ["src/lib/batch/*"],
+            "$lib/*": ["src/lib/*"],
+            "$orderline/*": ["src/lib/batch/orderline/*"]
         }
     }
 }

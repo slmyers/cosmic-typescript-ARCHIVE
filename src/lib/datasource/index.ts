@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
-import { Batch, OrderLine } from '../model';
+import { BatchEntity } from '$batch/model';
+import { OrderLineEntity } from '$orderline/model';
 
 const PostgresDataSource = new DataSource({
     type: 'postgres',
@@ -8,14 +9,14 @@ const PostgresDataSource = new DataSource({
     username: String(process.env.DB_USER),
     password: String(process.env.DB_PASSWORD),
     database: String(process.env.DB_DATABASE),
-    entities: [Batch, OrderLine],
+    entities: [BatchEntity, OrderLineEntity],
     migrations: [String(process.env.MIGRATION_DIR) + '*{.js,.ts}'],
 });
 
 const SqliteDataSource = new DataSource({
     type: 'sqlite',
     database: String(process.env.DB_CONNECTION_STRING),
-    entities: [Batch, OrderLine],
+    entities: [BatchEntity, OrderLineEntity],
     migrations: [String(process.env.MIGRATION_DIR) + '*{.js,.ts}'],
 });
 

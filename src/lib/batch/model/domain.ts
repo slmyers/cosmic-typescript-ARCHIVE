@@ -1,7 +1,7 @@
 import { IBatch } from './interface.js';
-import { IOrderLine } from '../OrderLine';
+import { IOrderLine } from '$orderline/model/interface';
 
-export class DomainBatch implements IBatch {
+export class BatchDomain implements IBatch {
     private _allocatedLines: Map<string, IOrderLine>;
     constructor(
         public reference: string,
@@ -37,10 +37,10 @@ export class DomainBatch implements IBatch {
     }
     /**
      * compare instance against another batch to determine equality
-     * @param batch {DomainBatch} the batch to compare against
+     * @param batch {BatchDomain} the batch to compare against
      * @returns {boolean} true if the batches are equal
      */
-    equals(batch: DomainBatch): boolean {
+    equals(batch: BatchDomain): boolean {
         return this.reference === batch.reference;
     }
 
@@ -50,10 +50,10 @@ export class DomainBatch implements IBatch {
      * priority is determined by the batch with the earliest eta
      * if the eta is the same, the batch with the most available quantity is allocated first
      * if the eta and available quantity are the same then batches are equal
-     * @param batch {DomainBatch} the batch to compare against
+     * @param batch {BatchDomain} the batch to compare against
      * @returns {number} -1 if this batch has higher priority, 1 if the other batch has higher priority, 0 if the batches are equal
      * */
-    priority(batch: DomainBatch): number {
+    priority(batch: BatchDomain): number {
         if (this.eta < batch.eta) {
             return -1;
         }

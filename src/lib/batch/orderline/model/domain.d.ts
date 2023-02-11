@@ -1,4 +1,4 @@
-export declare class OrderLine {
+export declare class OrderLineDomain {
     readonly reference: string;
     readonly sku: string;
     readonly quantity: number;

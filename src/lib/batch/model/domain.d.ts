@@ -1,7 +1,7 @@
-import { IOrderLine } from '../OrderLine/interface';
+import { IOrderLine } from '$orderline/model/interface';
 
 // type declaration for a batch of items with a sku, quantity and allocated quantity
-export declare class Batch {
+export declare class BatchDomain {
     reference: string;
     sku: string;
     quantity: number;
@@ -13,7 +13,7 @@ export declare class Batch {
     canAllocate(line: IOrderLine): boolean;
     get availableQuantity(): number;
     // compare instance against another batch to determine equality
-    equals(batch: Batch): boolean;
+    equals(batch: BatchDomain): boolean;
     // compare instance against another batch to determine priority
     // higher priority batches are allocated first
     // priority is determined by the batch with the earliest eta
@@ -22,7 +22,7 @@ export declare class Batch {
     // if the eta, available quantity and reference are the same, the batches are equal
     // @param batch {Batch} the batch to compare against
     // @returns {number} -1 if this batch has higher priority, 1 if the other batch has higher priority, 0 if the batches are equal
-    priority(batch: Batch): number;
+    priority(batch: BatchDomain): number;
     // returns the allocated quantity by summing all lines allocated to this batch
     get allocatedQuantity(): number;
     deallocate(line: IOrderLine): void;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
     Column,
     CreateDateColumn,
@@ -7,11 +8,11 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { DomainOrderLine as DomainOrderLine } from './domain.js';
-import { Batch } from '../Batch/orm.js';
+import { OrderLineDomain } from './domain';
+import { BatchEntity } from '$batch/model';
 
 @Entity({ name: 'order_line' })
-export class OrderLine extends DomainOrderLine {
+export class OrderLineEntity extends OrderLineDomain {
     @PrimaryGeneratedColumn()
     readonly id!: number;
 
@@ -31,7 +32,7 @@ export class OrderLine extends DomainOrderLine {
     @UpdateDateColumn()
     readonly modified!: Date;
 
-    @ManyToOne(() => Batch, (batch) => batch.orderLines)
+    @ManyToOne(() => BatchEntity, (batch) => batch.orderLines)
     batchId!: number;
 
     constructor(sku: string, qty: number) {
