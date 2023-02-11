@@ -10,7 +10,9 @@ import {
 } from 'typeorm';
 import { OrderLineDomain } from './domain';
 import { BatchEntity } from '$batch/model';
+import { injectable } from 'tsyringe';
 
+@injectable()
 @Entity({ name: 'order_line' })
 export class OrderLineEntity extends OrderLineDomain {
     @PrimaryGeneratedColumn()

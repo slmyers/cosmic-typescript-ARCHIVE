@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { BatchEntity } from '$batch/model';
 import { OrderLineEntity } from '$orderline/model';
+import { registry } from 'tsyringe';
 
 const PostgresDataSource = new DataSource({
     type: 'postgres',
@@ -20,4 +21,14 @@ const SqliteDataSource = new DataSource({
     migrations: [String(process.env.MIGRATION_DIR) + '*{.js,.ts}'],
 });
 
-export { SqliteDataSource, PostgresDataSource };
+@registry([
+    {
+        token: 'PostgresDataSource',
+        useValue: PostgresDataSource,
+    },
+    {
+        token: 'SqliteDataSource',
+        useValue: SqliteDataSource,
+    },
+])
+export class DataSourceModule {}

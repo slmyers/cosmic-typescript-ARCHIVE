@@ -1,16 +1,11 @@
-import './batch.module.test.js';
 import { expect } from 'chai';
 import { BatchEntity } from '$batch/model';
-import { TransactionalTestContext } from '$test/setup';
+import { TransactionalTestContext } from '$test/TransactionalTestContext.js';
 import { container } from 'tsyringe';
 
 describe('Batch ORM', function () {
     let batch: BatchEntity;
     let ctx: TransactionalTestContext;
-
-    this.afterAll(async function () {
-        container.reset();
-    });
 
     this.beforeEach(async function () {
         batch = new BatchEntity(
