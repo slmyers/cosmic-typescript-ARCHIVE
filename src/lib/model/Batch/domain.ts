@@ -2,16 +2,13 @@ import { IBatch } from './interface.js';
 import { IOrderLine } from '../OrderLine';
 
 export class DomainBatch implements IBatch {
-    reference: string;
-    sku: string;
-    quantity: number;
-    eta: Date;
     private _allocatedLines: Map<string, IOrderLine>;
-    constructor(reference: string, sku: string, quantity: number, eta: Date) {
-        this.reference = reference;
-        this.sku = sku;
-        this.quantity = quantity;
-        this.eta = eta;
+    constructor(
+        public reference: string,
+        public sku: string,
+        public quantity: number,
+        public eta: Date,
+    ) {
         this._allocatedLines = new Map<string, IOrderLine>();
     }
     /**
