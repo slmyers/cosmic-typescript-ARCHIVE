@@ -1,2 +1,2 @@
 -   doing cosmic-python in typescript
--   instead of doing a repo pattern I've wrapped domain with an Entity, so it's more like an ActiveRecord.
+-   bunch of DI using `ts-syringe`
