@@ -1,6 +1,5 @@
 import { DataSource } from 'typeorm';
 import { Batch, OrderLine } from '../model';
-import { TransactionContext } from './TransactionContext.js';
 
 const PostgresDataSource = new DataSource({
     type: 'postgres',
@@ -20,4 +19,4 @@ const SqliteDataSource = new DataSource({
     migrations: [String(process.env.MIGRATION_DIR) + '*{.js,.ts}'],
 });
 
-export { SqliteDataSource, PostgresDataSource, TransactionContext };
+export { SqliteDataSource, PostgresDataSource };

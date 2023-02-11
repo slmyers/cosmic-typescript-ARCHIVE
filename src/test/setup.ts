@@ -1,10 +1,8 @@
 import 'reflect-metadata';
 import dotenv from 'dotenv';
 import { DataSource, QueryRunner } from 'typeorm';
-import { SqliteDataSource } from '../lib';
-
-// TODO: the build process should put a .env file in the root of the build directory
-dotenv.config({ path: __dirname + '/../../../config/test.env' });
+import path from 'path';
+dotenv.config({ path: path.join(process.cwd(), 'config', 'test.env') });
 
 // https://github.com/viniciusjssouza/typeorm-transactional-tests
 
@@ -131,19 +129,3 @@ export const transactionalContext = {
         TransactionalTestContextManager.getInstance(),
     ),
 };
-
-// export const datasource: Promise<DataSource> = new Promise(
-//     (resolve, reject) => {
-//         SqliteDataSource.initialize()
-//             .then((dataSource) => {
-//                 return dataSource.runMigrations().then((migrations) => {
-//                     console.log('ran migrations');
-//                     console.log(migrations);
-//                     return resolve(dataSource);
-//                 });
-//             })
-//             .catch((error: any) => {
-//                 return reject(error);
-//             });
-//     },
-// );
