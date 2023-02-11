@@ -1,7 +1,8 @@
 import 'reflect-metadata';
-import { inject, singleton } from 'tsyringe';
+import { inject, registry, singleton } from 'tsyringe';
 import dotenv from 'dotenv';
 import { DataSource, QueryRunner } from 'typeorm';
+import { SqliteDataSource } from '$lib/datasource';
 import path from 'path';
 dotenv.config({ path: path.join(process.cwd(), 'config', 'test.env') });
 
@@ -36,7 +37,7 @@ export class TransactionalTestContext {
     private queryRunner: QueryRunnerWrapper | null = null;
     private originQueryRunnerFunction: any;
     private ready: any;
-    constructor(@inject('DataSource') private readonly connection: DataSource) {
+    constructor(@inject(DataSource) private readonly connection: DataSource) {
         this.ready = this.init().catch(() => {
             throw new Error('Could not initialize database connection');
         });
