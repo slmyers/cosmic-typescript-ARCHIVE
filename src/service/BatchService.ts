@@ -1,7 +1,8 @@
-import { DataSource, EntityManager } from 'typeorm';
+import { DataSource, EntityManager, In } from 'typeorm';
 import { injectable, inject } from 'tsyringe';
 import { allocate, IOrderLine } from '$domain/index';
 import { BatchEntity, OrderLineEntity } from '$entity/index';
+import { EnvironmentService } from '@/environment/environment.service.js';
 
 @injectable()
 export class BatchService {
@@ -10,6 +11,8 @@ export class BatchService {
     constructor(
         @inject(DataSource)
         dataSource: DataSource,
+        @inject(EnvironmentService)
+        private env: EnvironmentService,
     ) {
         this.manager = dataSource.manager;
     }
@@ -23,7 +26,7 @@ export class BatchService {
         const batches = await this.manager.find(BatchEntity, {
             where: { sku: orderLine.sku },
             order: { eta: 'ASC' },
-            take: 100,
+            take: this.env.getNumber('ALLOCATE_BATCH_SIZE'),
         });
         if (batches.length) {
             const reference = allocate(orderLine, batches);

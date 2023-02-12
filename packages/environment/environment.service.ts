@@ -4,8 +4,12 @@ import dotenv from 'dotenv';
 
 @singleton()
 export class EnvironmentService {
-    constructor(@inject('env.path') private readonly path: string) {
-        dotenv.config({ path });
+    constructor(
+        @inject('env.path') private readonly envPath: string,
+        @inject('shared.path') private readonly sharedPath: string,
+    ) {
+        dotenv.config({ path: sharedPath });
+        dotenv.config({ path: envPath, override: true });
     }
     static self(
         service?: EnvironmentService,
@@ -27,6 +31,10 @@ export class EnvironmentService {
         return value;
     }
 
+    getNumber(key: string): number {
+        return Number(this.get(key));
+    }
+
     get migrations(): string[] {
         return [
             EnvironmentService.self(this).get('MIGRATION_DIR') + '*{.js,.ts}',
@@ -44,7 +52,7 @@ export class EnvironmentService {
             password: self.get('DB_PASSWORD'),
             database: self.get('DB_DATABASE'),
             migrations: this.migrations,
-            logging: false,
+            logging: self.get('DB_LOGGING') === 'true',
         };
     }
 
@@ -55,7 +63,7 @@ export class EnvironmentService {
             type: 'sqlite',
             database: self.get('DB_CONNECTION_STRING'),
             migrations: this.migrations,
-            logging: false,
+            logging: self.get('DB_LOGGING') === 'true',
         };
     }
 

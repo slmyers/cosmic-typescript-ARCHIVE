@@ -11,6 +11,14 @@ import { DataSource } from 'typeorm';
         useValue: path.join('/mnt/e/cosmic-typescript/', 'config', 'test.env'),
     },
     {
+        token: 'shared.path',
+        useValue: path.join(
+            '/mnt/e/cosmic-typescript/',
+            'config',
+            'shared.env',
+        ),
+    },
+    {
         token: DataSource,
         useToken: 'SqliteDataSource',
     },

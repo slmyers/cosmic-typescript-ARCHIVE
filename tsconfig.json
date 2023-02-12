@@ -19,6 +19,7 @@
         "allowJs": true,
         "skipLibCheck": true,
         "baseUrl": ".",
+        "resolveJsonModule": true,
         "paths": {
             /*
         Allow using e.g. `import '@/sample-module' instead of using relative paths.
@@ -39,7 +40,8 @@
             "$test/*": ["test/*"],
             "$domain/*": ["src/domain/*"],
             "$entity/*": ["src/entity/*"],
-            "$service/*": ["src/service/*"]
+            "$service/*": ["src/service/*"],
+            "$repository/*": ["src/repository/*"]
         }
     }
 }

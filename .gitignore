@@ -4,4 +4,6 @@ sandbox
 sand\ box
 debug.log
 /config/*.env
+!/config/.env.example
+!/config/shared.env
 undefined

@@ -7,8 +7,6 @@ import {
     OneToMany,
     CreateDateColumn,
     UpdateDateColumn,
-    BeforeInsert,
-    BeforeUpdate,
 } from 'typeorm';
 import { BatchDomain } from '$domain/batchdomain';
 import { OrderLineEntity } from './orderlineentity';
