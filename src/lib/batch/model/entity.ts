@@ -7,6 +7,8 @@ import {
     OneToMany,
     CreateDateColumn,
     UpdateDateColumn,
+    BeforeInsert,
+    BeforeUpdate,
 } from 'typeorm';
 import { BatchDomain } from './domain';
 import { OrderLineEntity } from '$orderline/model';
@@ -37,10 +39,30 @@ export class BatchEntity extends BatchDomain {
     @UpdateDateColumn()
     readonly modified!: Date;
 
-    @OneToMany(() => OrderLineEntity, (orderLine) => orderLine.batchId)
-    orderLines!: OrderLineEntity[];
+    @OneToMany(() => OrderLineEntity, (orderLine) => orderLine.batch)
+    orderLines?: OrderLineEntity[];
+
+    onAllocated(line: OrderLineEntity) {
+        if (!this.id) {
+            throw new Error('Batch must be saved before allocating');
+        }
+
+        if (!this.orderLines) {
+            this.orderLines = [];
+        }
+
+        if (!this.orderLines.some((l) => l.reference === line.reference)) {
+            line.batchId = this.id;
+            this.orderLines.push(line);
+            this.quantity = super.availableQuantity;
+        }
+    }
 
     constructor(reference: string, sku: string, qty: number, eta: Date) {
         super(reference, sku, qty, eta);
+
+        super.on('allocated', (event: any) => {
+            this.onAllocated(event.line);
+        });
     }
 }

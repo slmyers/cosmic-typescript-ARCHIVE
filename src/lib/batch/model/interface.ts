@@ -1,6 +1,6 @@
 export interface IBatch {
-    reference: string;
-    sku: string;
-    quantity: number;
-    eta: Date;
+    reference: string | undefined;
+    sku: string | undefined;
+    quantity: number | undefined;
+    eta: Date | undefined;
 }

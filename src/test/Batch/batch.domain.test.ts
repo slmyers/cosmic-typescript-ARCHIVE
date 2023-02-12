@@ -66,6 +66,7 @@ describe('Batch Domain', function () {
                 'SMALL-TABLE',
                 batch.availableQuantity + 1,
             );
+            batch.allocate(line);
             expect(batch.availableQuantity).to.equal(20);
         });
     });
@@ -82,20 +83,56 @@ describe('Batch Domain', function () {
         it('is equal if reference is the same', function () {
             otherBatch = new BatchDomain(
                 'batch-001',
-                'LARGE-TABLE',
+                'SMALL-TABLE',
                 20,
                 new Date(),
             );
             expect(batch.equals(otherBatch)).to.be.true;
         });
 
+        it('is equal if the order lines are the same', function () {
+            otherBatch = new BatchDomain(
+                'batch-001',
+                'SMALL-TABLE',
+                20,
+                new Date(),
+            );
+            const orderLine = new OrderLineDomain('SMALL-TABLE', 1);
+            otherBatch.allocate(orderLine);
+            batch.allocate(orderLine);
+            expect(batch.equals(otherBatch)).to.be.true;
+        });
+
         it('is not equal if reference is different', function () {
             otherBatch = new BatchDomain(
                 'batch-002',
+                'SMALL-TABLE',
+                20,
+                new Date(),
+            );
+            expect(batch.equals(otherBatch)).to.be.false;
+        });
+
+        it('is not equal if sku is different', function () {
+            otherBatch = new BatchDomain(
+                'batch-001',
                 'LARGE-TABLE',
                 20,
                 new Date(),
             );
+            expect(batch.equals(otherBatch)).to.be.false;
+        });
+
+        it('is not equal if the order line is different', function () {
+            otherBatch = new BatchDomain(
+                'batch-001',
+                'SMALL-TABLE',
+                20,
+                new Date(),
+            );
+            const orderLine = new OrderLineDomain('SMALL-TABLE', 1);
+            expect(otherBatch.canAllocate(orderLine)).to.be.true;
+            otherBatch.allocate(orderLine);
             expect(batch.equals(otherBatch)).to.be.false;
         });
     });

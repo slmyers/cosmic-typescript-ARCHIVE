@@ -2,33 +2,37 @@ import { DataSource } from 'typeorm';
 import { BatchEntity } from '$batch/model';
 import { OrderLineEntity } from '$orderline/model';
 import { registry } from 'tsyringe';
+import { EnvironmentService } from '$lib/environment/environment.service.js';
 
-const PostgresDataSource = new DataSource({
-    type: 'postgres',
-    host: String(process.env.DB_HOST),
-    port: Number(process.env.DB_PORT),
-    username: String(process.env.DB_USER),
-    password: String(process.env.DB_PASSWORD),
-    database: String(process.env.DB_DATABASE),
-    entities: [BatchEntity, OrderLineEntity],
-    migrations: [String(process.env.MIGRATION_DIR) + '*{.js,.ts}'],
-});
-
-const SqliteDataSource = new DataSource({
-    type: 'sqlite',
-    database: String(process.env.DB_CONNECTION_STRING),
-    entities: [BatchEntity, OrderLineEntity],
-    migrations: [String(process.env.MIGRATION_DIR) + '*{.js,.ts}'],
-});
+let PostgresDataSource: DataSource;
+let SqliteDataSource: DataSource;
 
 @registry([
     {
         token: 'PostgresDataSource',
-        useValue: PostgresDataSource,
+        useFactory(dependencyContainer) {
+            if (PostgresDataSource) return PostgresDataSource;
+
+            const env = dependencyContainer.resolve(EnvironmentService);
+            PostgresDataSource = new DataSource({
+                ...env.pgEnv,
+                entities: [BatchEntity, OrderLineEntity],
+            });
+            return PostgresDataSource;
+        },
     },
     {
         token: 'SqliteDataSource',
-        useValue: SqliteDataSource,
+        useFactory(dependencyContainer) {
+            if (SqliteDataSource) return SqliteDataSource;
+
+            const env = dependencyContainer.resolve(EnvironmentService);
+            SqliteDataSource = new DataSource({
+                ...env.sqliteEnv,
+                entities: [BatchEntity, OrderLineEntity],
+            });
+            return SqliteDataSource;
+        },
     },
 ])
 export class DataSourceModule {}

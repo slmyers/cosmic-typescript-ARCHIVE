@@ -4,6 +4,7 @@ import {
     CreateDateColumn,
     Entity,
     Generated,
+    JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
@@ -35,6 +36,10 @@ export class OrderLineEntity extends OrderLineDomain {
     readonly modified!: Date;
 
     @ManyToOne(() => BatchEntity, (batch) => batch.orderLines)
+    batch!: BatchEntity;
+
+    @Column()
+    @JoinColumn()
     batchId!: number;
 
     constructor(sku: string, qty: number) {

@@ -17,6 +17,9 @@ export class CreateBatch1675638465885 implements MigrationInterface {
                     constraint UQ_batch_reference unique (reference)
                 );
             `);
+            await queryRunner.query(`
+                CREATE INDEX IF NOT EXISTS IDX_batch_reference ON batch (reference);
+            `);
         } else if (dbType === 'postgres') {
             await queryRunner.query(`
                 CREATE TABLE IF NOT EXISTS batch(
@@ -29,6 +32,9 @@ export class CreateBatch1675638465885 implements MigrationInterface {
                     modified      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     constraint UQ_batch_reference unique (reference)
                 );
+            `);
+            await queryRunner.query(`
+                CREATE INDEX IF NOT EXISTS IDX_batch_reference ON batch (reference);
             `);
         } else {
             throw new Error(`DB_TYPE ${dbType} not supported`);

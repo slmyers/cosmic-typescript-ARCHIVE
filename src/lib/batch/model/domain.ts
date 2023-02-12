@@ -1,7 +1,8 @@
 import { IBatch } from './interface.js';
 import { IOrderLine } from '$orderline/model/interface';
+import { EventEmitter } from 'stream';
 
-export class BatchDomain implements IBatch {
+export class BatchDomain extends EventEmitter implements IBatch {
     private _allocatedLines: Map<string, IOrderLine>;
     constructor(
         public reference: string,
@@ -9,6 +10,7 @@ export class BatchDomain implements IBatch {
         public quantity: number,
         public eta: Date,
     ) {
+        super();
         this._allocatedLines = new Map<string, IOrderLine>();
     }
     /**
@@ -28,11 +30,13 @@ export class BatchDomain implements IBatch {
     allocate(line: IOrderLine): void {
         if (this.canAllocate(line)) {
             this._allocatedLines.set(line.reference, line);
+            this.emit('allocated', { line });
         }
     }
     deallocate(line: IOrderLine): void {
         if (this._allocatedLines.has(line.reference)) {
             this._allocatedLines.delete(line.reference);
+            this.emit('deallocated', { line });
         }
     }
     /**
@@ -41,7 +45,17 @@ export class BatchDomain implements IBatch {
      * @returns {boolean} true if the batches are equal
      */
     equals(batch: BatchDomain): boolean {
-        return this.reference === batch.reference;
+        const sameReference = this.reference === batch.reference;
+        const sameSku = this.sku === batch.sku;
+        let sameOrders =
+            this._allocatedLines.size === batch._allocatedLines.size;
+        for (const reference of this._allocatedLines.keys()) {
+            if (!batch._allocatedLines.has(reference)) {
+                sameOrders = false;
+                break;
+            }
+        }
+        return sameReference && sameSku && sameOrders;
     }
 
     /**
