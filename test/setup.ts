@@ -1,6 +1,5 @@
 import 'reflect-metadata';
-import '$batch/batch.module';
-import '$lib/datasource/datasource.module';
+import '@/datasource/datasource.module';
 import path from 'path';
 import { TransactionalTestContext } from './TransactionalTestContext';
 import { container, registry } from 'tsyringe';
@@ -9,7 +8,7 @@ import { DataSource } from 'typeorm';
 @registry([
     {
         token: 'env.path',
-        useValue: path.join(process.cwd(), 'config', 'test.env'),
+        useValue: path.join('/mnt/e/cosmic-typescript/', 'config', 'test.env'),
     },
     {
         token: DataSource,

@@ -1,8 +1,6 @@
-import { BatchDomain } from './domain.js';
-import { IOrderLine } from '$orderline/model';
-export { IBatch } from './interface.js';
-export { BatchEntity } from './entity.js';
-export { BatchDomain } from './domain.js';
+import { BatchDomain, IBatch } from './batchdomain';
+import { IOrderLine, OrderLineDomain } from './orderlinedomain';
+export { BatchDomain, IOrderLine, IBatch, OrderLineDomain };
 
 export function allocate(line: IOrderLine, batches: BatchDomain[]): string {
     const batch = batches.find((b) => b.canAllocate(line));

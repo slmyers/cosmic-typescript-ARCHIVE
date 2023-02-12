@@ -1,5 +1,4 @@
-import { IBatch } from './interface.js';
-import { IOrderLine } from '$orderline/model/interface';
+import { IOrderLine } from './orderlinedomain';
 import { EventEmitter } from 'stream';
 
 export class BatchDomain extends EventEmitter implements IBatch {
@@ -101,4 +100,11 @@ export class BatchDomain extends EventEmitter implements IBatch {
     get availableQuantity(): number {
         return this.quantity - this.allocatedQuantity;
     }
+}
+
+export interface IBatch {
+    reference: string | undefined;
+    sku: string | undefined;
+    quantity: number | undefined;
+    eta: Date | undefined;
 }

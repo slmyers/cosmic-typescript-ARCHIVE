@@ -1,7 +1,7 @@
 import { DataSource, EntityManager } from 'typeorm';
 import { injectable, inject } from 'tsyringe';
-import { BatchEntity, allocate } from '$batch/model';
-import { IOrderLine, OrderLineEntity } from '$orderline/model';
+import { allocate, IOrderLine } from '$domain/index';
+import { BatchEntity, OrderLineEntity } from '$entity/index';
 
 @injectable()
 export class BatchService {

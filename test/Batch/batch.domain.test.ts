@@ -1,6 +1,5 @@
 import { expect } from 'chai';
-import { BatchDomain, allocate } from '$batch/model';
-import { OrderLineDomain } from '$orderline/model';
+import { BatchDomain, allocate, OrderLineDomain } from '$domain/index';
 
 describe('Batch Domain', function () {
     describe('can allocate', function () {

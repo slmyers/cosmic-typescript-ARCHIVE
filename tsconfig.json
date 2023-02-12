@@ -1,5 +1,5 @@
 {
-    "include": ["src/**/*", "migrations/**/*", "packages/**/*"],
+    "include": ["src/**/*", "migrations/**/*", "packages/**/*", "test/**/*"],
     "exclude": ["node_modules"],
     "compilerOptions": {
         "experimentalDecorators": true,
@@ -36,10 +36,10 @@
             "@/*": ["packages/*"],
             "$/*": ["src/*"],
             "$cli/*": ["src/cli/*"],
-            "$test/*": ["src/test/*"],
-            "$batch/*": ["src/lib/batch/*"],
-            "$lib/*": ["src/lib/*"],
-            "$orderline/*": ["src/lib/batch/orderline/*"]
+            "$test/*": ["test/*"],
+            "$domain/*": ["src/domain/*"],
+            "$entity/*": ["src/entity/*"],
+            "$service/*": ["src/service/*"]
         }
     }
 }

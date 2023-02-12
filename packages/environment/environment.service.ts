@@ -1,6 +1,6 @@
 import { inject, singleton } from 'tsyringe';
-import dotenv from 'dotenv';
 import { DataSourceOptions } from 'typeorm';
+import dotenv from 'dotenv';
 
 @singleton()
 export class EnvironmentService {

@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { BatchEntity, allocate } from '$batch/model';
+import { OrderLineEntity, BatchEntity } from '$entity/index';
+import { allocate } from '$domain/index';
 import { TransactionalTestContext } from '$test/TransactionalTestContext.js';
 import { container } from 'tsyringe';
-import { OrderLineEntity } from '$/lib/batch/orderline/model/entity.js';
 import { DataSource } from 'typeorm';
 
 describe('Batch Entity', function () {

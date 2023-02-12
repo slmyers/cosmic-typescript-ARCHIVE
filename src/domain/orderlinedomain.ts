@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import { IOrderLine } from './interface.js';
 
 export class OrderLineDomain implements IOrderLine {
     readonly reference: string;
@@ -10,4 +9,10 @@ export class OrderLineDomain implements IOrderLine {
     ) {
         this.reference = uuidv4();
     }
+}
+
+export interface IOrderLine {
+    reference: string;
+    sku: string;
+    quantity: number;
 }

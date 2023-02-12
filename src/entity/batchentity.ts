@@ -10,8 +10,8 @@ import {
     BeforeInsert,
     BeforeUpdate,
 } from 'typeorm';
-import { BatchDomain } from './domain';
-import { OrderLineEntity } from '$orderline/model';
+import { BatchDomain } from '$domain/batchdomain';
+import { OrderLineEntity } from './orderlineentity';
 import { injectable } from 'tsyringe';
 
 @injectable()

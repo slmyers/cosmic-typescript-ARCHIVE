@@ -1,6 +1,5 @@
-import { BatchEntity } from '$/lib/batch/model/entity.js';
-import { OrderLineEntity } from '$/lib/batch/orderline/model/entity.js';
-import { BatchService } from '$/lib/batch/service/BatchService.js';
+import { BatchEntity, OrderLineEntity } from '$entity/index';
+import { BatchService } from '$service/index';
 import { container } from 'tsyringe';
 import { expect } from 'chai';
 import { DataSource, EntityManager } from 'typeorm';

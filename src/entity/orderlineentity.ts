@@ -9,8 +9,8 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { OrderLineDomain } from './domain';
-import { BatchEntity } from '$batch/model';
+import { OrderLineDomain } from '$domain/index';
+import { BatchEntity } from './batchentity';
 import { injectable } from 'tsyringe';
 
 @injectable()

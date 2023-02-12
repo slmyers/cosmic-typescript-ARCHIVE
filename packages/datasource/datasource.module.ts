@@ -1,8 +1,8 @@
+import { EnvironmentService } from '@/environment/environment.service';
 import { DataSource } from 'typeorm';
-import { BatchEntity } from '$batch/model';
-import { OrderLineEntity } from '$orderline/model';
+import { BatchEntity } from '$entity/batchentity';
+import { OrderLineEntity } from '$entity/orderlineentity';
 import { registry } from 'tsyringe';
-import { EnvironmentService } from '$lib/environment/environment.service.js';
 
 let PostgresDataSource: DataSource;
 let SqliteDataSource: DataSource;
