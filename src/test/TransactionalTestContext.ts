@@ -32,31 +32,17 @@ export class TransactionalTestContext {
     private queryRunner: QueryRunnerWrapper | null = null;
     private originQueryRunnerFunction: any;
     private ready: any;
-    constructor(@inject(DataSource) private readonly connection: DataSource) {
-        this.ready = this.init().catch(() => {
-            throw new Error('Could not initialize database connection');
-        });
-    }
-
-    private async init(): Promise<void> {
-        if (this.ready) {
-            return;
-        }
-        return new Promise((resolve) => {
-            return this.connection
-                .initialize()
-                .then(() => this.connection.runMigrations())
-                .then(() => resolve());
-        });
-    }
+    constructor(
+        @inject(DataSource) private readonly connection: DataSource,
+        @inject('init') private readonly init: () => Promise<void>,
+    ) {}
 
     get manager() {
         return this.connection.manager;
     }
 
     async start(): Promise<void> {
-        await this.ready;
-
+        await this.init();
         if (this.queryRunner) {
             throw new Error('Context already started');
         }
