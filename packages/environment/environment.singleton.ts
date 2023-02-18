@@ -3,17 +3,17 @@ import { DataSourceOptions } from 'typeorm';
 import dotenv from 'dotenv';
 
 @singleton()
-export class EnvironmentService {
+export class EnvironmentSingleton {
     constructor(
-        @inject('env.path') private readonly envPath: string,
-        @inject('shared.path') private readonly sharedPath: string,
+        @inject('env.path') envPath: string,
+        @inject('shared.path') sharedPath: string,
     ) {
         dotenv.config({ path: sharedPath });
         dotenv.config({ path: envPath, override: true });
     }
     static self(
-        service?: EnvironmentService,
-    ): EnvironmentService | { get: (key: string) => string } {
+        service?: EnvironmentSingleton,
+    ): EnvironmentSingleton | { get: (key: string) => string } {
         return (
             service || {
                 get: (key: string) => {
@@ -37,12 +37,12 @@ export class EnvironmentService {
 
     get migrations(): string[] {
         return [
-            EnvironmentService.self(this).get('MIGRATION_DIR') + '*{.js,.ts}',
+            EnvironmentSingleton.self(this).get('MIGRATION_DIR') + '*{.js,.ts}',
         ];
     }
 
     get pgEnv(): DataSourceOptions {
-        const self = EnvironmentService.self(this);
+        const self = EnvironmentSingleton.self(this);
 
         return {
             type: 'postgres',
@@ -57,7 +57,7 @@ export class EnvironmentService {
     }
 
     get sqliteEnv(): DataSourceOptions {
-        const self = EnvironmentService.self(this);
+        const self = EnvironmentSingleton.self(this);
 
         return {
             type: 'sqlite',
@@ -68,6 +68,6 @@ export class EnvironmentService {
     }
 
     get nodeEnv(): string {
-        return EnvironmentService.self(this).get('NODE_ENV');
+        return EnvironmentSingleton.self(this).get('NODE_ENV');
     }
 }

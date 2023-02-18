@@ -1,24 +1,22 @@
 import { Batch, IBatch, IOrderLine } from '$/model/index';
-import { inject, injectable } from 'tsyringe';
 import {
     BeforeInsert,
     BeforeUpdate,
     Column,
     CreateDateColumn,
     Entity,
-    EntityManager,
     Generated,
     OneToMany,
     PrimaryGeneratedColumn,
+    QueryRunner,
     Repository,
     UpdateDateColumn,
 } from 'typeorm';
 import { OrderLineEntity } from './orderline.repository.js';
 
-@injectable()
 export class BatchRepository extends Repository<BatchEntity> {
-    constructor(@inject(EntityManager) manager: EntityManager) {
-        super(BatchEntity, manager, manager.queryRunner);
+    constructor(queryRunnner: QueryRunner) {
+        super(BatchEntity, queryRunnner.manager, queryRunnner);
     }
 
     async allocate(batch: IBatch, orderLine: IOrderLine): Promise<IOrderLine> {
@@ -29,7 +27,7 @@ export class BatchRepository extends Repository<BatchEntity> {
         const orderLineEntity = new OrderLineEntity(orderLine);
         orderLineEntity.batchId = batch.id;
 
-        return await this.manager.save(orderLineEntity);
+        return this.manager.save(orderLineEntity);
     }
 }
 

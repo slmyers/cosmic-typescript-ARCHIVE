@@ -1,15 +1,19 @@
 import { allocate, Batch, IBatch } from '$/model/index.js';
 import { IOrderLine } from '$/model/orderline.model.js';
+import { BatchUnitOfWork } from '$/repository/batch.uow.js';
 import { BatchEntity, BatchRepository } from '$/repository/index';
-import { inject, injectable } from 'tsyringe';
+import { delay, inject, injectable } from 'tsyringe';
 import { FindOneOptions, FindManyOptions } from 'typeorm';
 
 @injectable()
 export class BatchService {
+    batchRepository!: BatchRepository;
     constructor(
-        @inject(BatchRepository)
-        private readonly batchRepository: BatchRepository,
-    ) {}
+        @inject(BatchUnitOfWork)
+        private readonly batchUnitOfWork: BatchUnitOfWork,
+    ) {
+        this.batchRepository = this.batchUnitOfWork.batchRepository;
+    }
 
     async allocateOrderline(orderLine: IOrderLine): Promise<void> {
         const batchEntities = await this.batchRepository.find({
@@ -27,7 +31,6 @@ export class BatchService {
             const batch = batchEntities.find((b) => b.reference === ref);
             if (batch) {
                 await this.batchRepository.allocate(batch, orderLine);
-                console.log('allocated');
             }
         }
     }

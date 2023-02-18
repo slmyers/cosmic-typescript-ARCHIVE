@@ -1,25 +1,24 @@
 import { expect } from 'chai';
-import { container } from 'tsyringe';
+import { container, DependencyContainer } from 'tsyringe';
 import { Batch, allocate, OrderLine } from '$model/index';
 import { BatchService } from '$service/index';
-import { BatchRepository } from '$repository/index';
 import { TestModule } from '$test/setup.js';
 import { TransactionalTestContext } from '$test/TransactionalTestContext.js';
 
-describe.only('Batch Service', function () {
+describe('Batch Service', function () {
     let ctx: TransactionalTestContext;
     let batchService: BatchService;
-    let batchRepository: BatchRepository;
+    let testContainer: DependencyContainer;
 
     this.beforeAll(async function () {
         await TestModule.bootstrap();
     });
 
     this.beforeEach(async function () {
-        batchService = container.resolve(BatchService);
-        batchRepository = container.resolve(BatchRepository);
         ctx = container.resolve(TransactionalTestContext);
         await ctx.start();
+        testContainer = container.createChildContainer();
+        batchService = testContainer.resolve(BatchService);
     });
 
     it('can allocate to a batch', async function () {
@@ -44,5 +43,10 @@ describe.only('Batch Service', function () {
             throw new Error('Batch not found');
         }
         expect(found.equals(batch)).to.be.true;
+    });
+
+    this.afterEach(async function () {
+        await ctx.finish();
+        await testContainer.dispose();
     });
 });

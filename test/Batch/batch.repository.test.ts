@@ -4,6 +4,7 @@ import { BatchRepository } from '$/repository/index';
 import { allocate, Batch, OrderLine } from '$/model/index';
 import { TransactionalTestContext } from '$test/TransactionalTestContext';
 import { TestModule } from '$test/setup';
+import { DataSource } from 'typeorm';
 
 describe('Batch Repository', function () {
     let ctx: TransactionalTestContext;
@@ -14,8 +15,9 @@ describe('Batch Repository', function () {
     });
 
     this.beforeEach(async function () {
-        batchRepository = container.resolve(BatchRepository);
         ctx = container.resolve(TransactionalTestContext);
+        const dataSource = container.resolve(DataSource);
+        batchRepository = new BatchRepository(dataSource.createQueryRunner());
         await ctx.start();
     });
 

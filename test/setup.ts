@@ -4,7 +4,11 @@ import path from 'path';
 import { TransactionalTestContext } from './TransactionalTestContext';
 import { container, registry } from 'tsyringe';
 import { DataSource, EntityManager } from 'typeorm';
-import { BatchEntity, OrderLineEntity } from '$/repository/index';
+import {
+    BatchEntity,
+    OrderLineEntity,
+    BatchUnitOfWork,
+} from '$/repository/index';
 
 @registry([
     {

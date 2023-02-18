@@ -54,13 +54,6 @@ export class Batch implements IBatch {
                 break;
             }
         }
-        // console.log({
-        //     sameReference,
-        //     sameSku,
-        //     sameOrders,
-        //     thisAllocatedLines: this._allocatedLines,
-        //     otherAllocatedLines: batch._allocatedLines,
-        // });
         return sameReference && sameSku && sameOrders;
     }
 

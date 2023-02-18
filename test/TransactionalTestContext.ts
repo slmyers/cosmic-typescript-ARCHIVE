@@ -29,7 +29,7 @@ const wrap = (originalQueryRunner: QueryRunner): QueryRunnerWrapper => {
 
 @singleton()
 export class TransactionalTestContext {
-    private queryRunner: QueryRunnerWrapper | null = null;
+    public queryRunner: QueryRunnerWrapper | null = null;
     private originQueryRunnerFunction: any;
     constructor(@inject(DataSource) private readonly connection: DataSource) {}
 

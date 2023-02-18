@@ -1,2 +1,3 @@
 export { BatchRepository, BatchEntity } from './batch.repository';
-export { OrderLineRepository, OrderLineEntity } from './orderline.repository';
+export { OrderLineEntity } from './orderline.repository';
+export { BatchUnitOfWork } from './batch.uow';

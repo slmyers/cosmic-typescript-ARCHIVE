@@ -5,19 +5,11 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
-    Repository,
-    EntityManager,
     Generated,
     JoinColumn,
     ManyToOne,
 } from 'typeorm';
 import { BatchEntity } from './batch.repository.js';
-
-export class OrderLineRepository extends Repository<OrderLineEntity> {
-    constructor(manager: EntityManager) {
-        super(OrderLineEntity, manager, manager.queryRunner);
-    }
-}
 
 @Entity({ name: 'order_line' })
 export class OrderLineEntity {
