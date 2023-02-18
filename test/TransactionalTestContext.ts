@@ -31,18 +31,13 @@ const wrap = (originalQueryRunner: QueryRunner): QueryRunnerWrapper => {
 export class TransactionalTestContext {
     private queryRunner: QueryRunnerWrapper | null = null;
     private originQueryRunnerFunction: any;
-    private ready: any;
-    constructor(
-        @inject(DataSource) private readonly connection: DataSource,
-        @inject('init') private readonly init: () => Promise<void>,
-    ) {}
+    constructor(@inject(DataSource) private readonly connection: DataSource) {}
 
     get manager() {
         return this.connection.manager;
     }
 
     async start(): Promise<void> {
-        await this.init();
         if (this.queryRunner) {
             throw new Error('Context already started');
         }

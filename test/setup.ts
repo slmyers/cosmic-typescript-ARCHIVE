@@ -3,9 +3,18 @@ import '@/datasource/datasource.module';
 import path from 'path';
 import { TransactionalTestContext } from './TransactionalTestContext';
 import { container, registry } from 'tsyringe';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
+import { BatchEntity, OrderLineEntity } from '$/repository/index';
 
 @registry([
+    {
+        token: 'PostgresEntities',
+        useValue: [BatchEntity, OrderLineEntity],
+    },
+    {
+        token: 'SqliteEntities',
+        useValue: [BatchEntity, OrderLineEntity],
+    },
     {
         token: 'env.path',
         useValue: path.join('/mnt/e/cosmic-typescript/', 'config', 'test.env'),
@@ -39,5 +48,18 @@ import { DataSource } from 'typeorm';
             return init;
         },
     },
+    {
+        token: EntityManager,
+        useFactory(dependencyContainer) {
+            return dependencyContainer.resolve(DataSource).manager;
+        },
+    },
 ])
-export class TestModule {}
+class Module {
+    async bootstrap() {
+        const init = container.resolve<() => Promise<void>>('init');
+        await init();
+    }
+}
+
+export const TestModule = new Module();

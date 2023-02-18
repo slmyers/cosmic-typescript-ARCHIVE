@@ -38,10 +38,9 @@
             "$/*": ["src/*"],
             "$cli/*": ["src/cli/*"],
             "$test/*": ["test/*"],
-            "$domain/*": ["src/domain/*"],
-            "$entity/*": ["src/entity/*"],
-            "$service/*": ["src/service/*"],
-            "$repository/*": ["src/repository/*"]
+            "$model/*": ["src/model/*"],
+            "$repository/*": ["src/repository/*"],
+            "$service/*": ["src/service/*"]
         }
     }
 }

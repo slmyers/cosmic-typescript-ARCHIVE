@@ -1,16 +1,18 @@
-import { IOrderLine } from './orderlinedomain';
-import { EventEmitter } from 'stream';
+import { IOrderLine } from './orderline.model';
 
-export class BatchDomain extends EventEmitter implements IBatch {
+export class Batch implements IBatch {
     private _allocatedLines: Map<string, IOrderLine>;
     constructor(
         public reference: string,
         public sku: string,
         public quantity: number,
         public eta: Date,
+        public orderLines: IOrderLine[] = [],
     ) {
-        super();
         this._allocatedLines = new Map<string, IOrderLine>();
+        for (const line of orderLines) {
+            this._allocatedLines.set(line.reference, line);
+        }
     }
     /**
      * determines if a line can be allocated to this batch
@@ -29,21 +31,19 @@ export class BatchDomain extends EventEmitter implements IBatch {
     allocate(line: IOrderLine): void {
         if (this.canAllocate(line)) {
             this._allocatedLines.set(line.reference, line);
-            this.emit('allocated', { line });
         }
     }
     deallocate(line: IOrderLine): void {
         if (this._allocatedLines.has(line.reference)) {
             this._allocatedLines.delete(line.reference);
-            this.emit('deallocated', { line });
         }
     }
     /**
      * compare instance against another batch to determine equality
-     * @param batch {BatchDomain} the batch to compare against
+     * @param batch {Batch} the batch to compare against
      * @returns {boolean} true if the batches are equal
      */
-    equals(batch: BatchDomain): boolean {
+    equals(batch: Batch): boolean {
         const sameReference = this.reference === batch.reference;
         const sameSku = this.sku === batch.sku;
         let sameOrders =
@@ -54,6 +54,13 @@ export class BatchDomain extends EventEmitter implements IBatch {
                 break;
             }
         }
+        // console.log({
+        //     sameReference,
+        //     sameSku,
+        //     sameOrders,
+        //     thisAllocatedLines: this._allocatedLines,
+        //     otherAllocatedLines: batch._allocatedLines,
+        // });
         return sameReference && sameSku && sameOrders;
     }
 
@@ -63,10 +70,10 @@ export class BatchDomain extends EventEmitter implements IBatch {
      * priority is determined by the batch with the earliest eta
      * if the eta is the same, the batch with the most available quantity is allocated first
      * if the eta and available quantity are the same then batches are equal
-     * @param batch {BatchDomain} the batch to compare against
+     * @param batch {Batch} the batch to compare against
      * @returns {number} -1 if this batch has higher priority, 1 if the other batch has higher priority, 0 if the batches are equal
      * */
-    priority(batch: BatchDomain): number {
+    priority(batch: Batch): number {
         if (this.eta < batch.eta) {
             return -1;
         }
@@ -107,4 +114,5 @@ export interface IBatch {
     sku: string | undefined;
     quantity: number | undefined;
     eta: Date | undefined;
+    id?: number;
 }

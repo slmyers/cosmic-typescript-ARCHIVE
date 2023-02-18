@@ -1,7 +1,5 @@
 import { EnvironmentService } from '@/environment/environment.service';
 import { DataSource } from 'typeorm';
-import { BatchEntity } from '$entity/batchentity';
-import { OrderLineEntity } from '$entity/orderlineentity';
 import { registry } from 'tsyringe';
 
 let PostgresDataSource: DataSource;
@@ -16,7 +14,7 @@ let SqliteDataSource: DataSource;
             const env = dependencyContainer.resolve(EnvironmentService);
             PostgresDataSource = new DataSource({
                 ...env.pgEnv,
-                entities: [BatchEntity, OrderLineEntity],
+                entities: dependencyContainer.resolve('PostgresEntities'),
             });
             return PostgresDataSource;
         },
@@ -29,7 +27,7 @@ let SqliteDataSource: DataSource;
             const env = dependencyContainer.resolve(EnvironmentService);
             SqliteDataSource = new DataSource({
                 ...env.sqliteEnv,
-                entities: [BatchEntity, OrderLineEntity],
+                entities: dependencyContainer.resolve('SqliteEntities'),
             });
             return SqliteDataSource;
         },

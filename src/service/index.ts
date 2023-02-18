@@ -1,1 +1,1 @@
-export { BatchService } from './BatchService';
+export { BatchService } from './batch.service';
