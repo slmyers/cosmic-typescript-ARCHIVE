@@ -15,7 +15,7 @@ export class BatchService {
         this.batchRepository = this.batchUnitOfWork.batchRepository;
     }
 
-    async allocateOrderline(orderLine: IOrderLine): Promise<void> {
+    async allocateOrderline(orderLine: IOrderLine): Promise<string> {
         const batchEntities = await this.batchRepository.find({
             where: { sku: orderLine.sku },
             take: 100,
@@ -33,6 +33,8 @@ export class BatchService {
                 await this.batchUnitOfWork.allocate(batch, orderLine);
             }
         }
+
+        return ref;
     }
 
     async save(batch: Batch): Promise<void> {
