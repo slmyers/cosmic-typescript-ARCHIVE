@@ -58,6 +58,10 @@ import {
             return dependencyContainer.resolve(DataSource).manager;
         },
     },
+    {
+        token: 'BatchUoW',
+        useClass: BatchUnitOfWork,
+    },
 ])
 class Module {
     async bootstrap() {

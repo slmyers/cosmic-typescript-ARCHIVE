@@ -100,12 +100,18 @@ export class Batch implements IBatch {
     get availableQuantity(): number {
         return this.quantity - this.allocatedQuantity;
     }
+
+    toModel(): Batch {
+        return this;
+    }
 }
 
 export interface IBatch {
-    reference: string | undefined;
-    sku: string | undefined;
-    quantity: number | undefined;
-    eta: Date | undefined;
+    reference: string;
+    sku: string;
+    quantity: number;
+    eta: Date;
     id?: number;
+    toModel(): Batch;
+    orderLines: IOrderLine[];
 }

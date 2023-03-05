@@ -1,4 +1,5 @@
 import { Batch, IBatch, IOrderLine } from '$/model/index';
+import { BatchRepo } from '$/types/index.js';
 import {
     BeforeInsert,
     BeforeUpdate,
@@ -14,7 +15,10 @@ import {
 } from 'typeorm';
 import { OrderLineEntity } from './orderline.repository.js';
 
-export class BatchRepository extends Repository<BatchEntity> {
+export class BatchRepository
+    extends Repository<BatchEntity>
+    implements BatchRepo
+{
     constructor(queryRunnner: QueryRunner) {
         super(BatchEntity, queryRunnner.manager, queryRunnner);
     }
