@@ -1,6 +1,7 @@
 import { Batch, IBatch } from './batch.model';
 import { IOrderLine, OrderLine } from './orderline.model';
-export { Batch, IOrderLine, IBatch, OrderLine };
+import { IProduct, Product } from './product.model';
+export { Batch, IOrderLine, IBatch, OrderLine, IProduct, Product };
 
 export function allocate(line: IOrderLine, batches: Batch[]): string {
     const batch = batches.find((b) => b.canAllocate(line));

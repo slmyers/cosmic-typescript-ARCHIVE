@@ -6,7 +6,7 @@ import { TransactionalTestContext } from '$test/TransactionalTestContext';
 import { TestModule } from '$test/setup';
 import { DataSource } from 'typeorm';
 
-describe('Batch Repository', function () {
+describe.only('Batch Repository', function () {
     let ctx: TransactionalTestContext;
     let batchRepository: BatchRepository;
 
@@ -17,8 +17,8 @@ describe('Batch Repository', function () {
     this.beforeEach(async function () {
         ctx = container.resolve(TransactionalTestContext);
         const dataSource = container.resolve(DataSource);
-        batchRepository = new BatchRepository(dataSource.createQueryRunner());
         await ctx.start();
+        batchRepository = new BatchRepository(dataSource.createQueryRunner());
     });
 
     it('can save a batch', async function () {

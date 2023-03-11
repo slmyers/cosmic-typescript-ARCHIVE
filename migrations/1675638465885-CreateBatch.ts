@@ -7,7 +7,7 @@ export class CreateBatch1675638465885 implements MigrationInterface {
         if (dbType === 'sqlite') {
             await queryRunner.query(`
                 CREATE TABLE IF NOT EXISTS batch(
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id INTEGER PRIMARY KEY,
                     sku           TEXT    NOT NULL,
                     quantity      INT     NOT NULL,
                     reference     TEXT    NOT NULL,
@@ -19,6 +19,7 @@ export class CreateBatch1675638465885 implements MigrationInterface {
             `);
             await queryRunner.query(`
                 CREATE INDEX IF NOT EXISTS IDX_batch_reference ON batch (reference);
+                CREATE INDEX IF NOT EXISTS IDX_batch_sku ON batch (sku);
             `);
         } else if (dbType === 'postgres') {
             await queryRunner.query(`
@@ -35,6 +36,7 @@ export class CreateBatch1675638465885 implements MigrationInterface {
             `);
             await queryRunner.query(`
                 CREATE INDEX IF NOT EXISTS IDX_batch_reference ON batch (reference);
+                CREATE INDEX IF NOT EXISTS IDX_batch_sku ON batch (sku);
             `);
         } else {
             throw new Error(`DB_TYPE ${dbType} not supported`);

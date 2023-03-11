@@ -7,7 +7,7 @@ export class CreateOrderLine1675638659391 implements MigrationInterface {
         if (dbType === 'sqlite') {
             await queryRunner.query(`
                 CREATE TABLE IF NOT EXISTS order_line (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                     sku           TEXT    NOT NULL,
                     quantity      INT     NOT NULL,
                     reference     TEXT    NOT NULL,

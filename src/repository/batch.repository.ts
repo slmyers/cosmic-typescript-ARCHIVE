@@ -37,15 +37,6 @@ export class BatchRepository
 
 @Entity({ name: 'batch' })
 export class BatchEntity implements IBatch {
-    @BeforeInsert()
-    @BeforeUpdate()
-    private beforeSave() {
-        this.quantity = this.allocatedQuantity;
-        if (this.quantity < 0) {
-            throw new Error('Invalid quantity');
-        }
-    }
-
     @PrimaryGeneratedColumn()
     id!: number;
 

@@ -5,9 +5,7 @@
  * be compiled -- if you need to deliver your types to consumers
  * of a published npm module use the '.ts' extension instead.
  */
-
-import { IBatch } from '$/model/batch.model.js';
-import { IOrderLine } from '$/model/orderline.model.js';
+import { IOrderLine, IBatch, IProduct } from '$/model/index';
 import { FindManyOptions, RemoveOptions } from 'typeorm';
 
 export interface BatchRepo {
@@ -19,6 +17,12 @@ export interface BatchRepo {
         options?: RemoveOptions | undefined,
     ): Promise<IBatch[]>;
     count(options: FindManyOptions<IBatch>): Promise<number>;
+}
+
+export interface ProductRepo {
+    save(product: IProduct): Promise<IProduct>;
+    allocate(product: IProduct, orderLine: IOrderLine): Promise<string>;
+    get(sku: string): Promise<IProduct>;
 }
 
 export type workState =
