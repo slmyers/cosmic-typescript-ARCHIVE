@@ -9,6 +9,7 @@ export class CreateBatch1675638465885 implements MigrationInterface {
                 CREATE TABLE IF NOT EXISTS batch(
                     id INTEGER PRIMARY KEY,
                     sku           TEXT    NOT NULL,
+                    "productId"   INT     NOT NULL,
                     quantity      INT     NOT NULL,
                     reference     TEXT    NOT NULL,
                     eta           DATETIME NOT NULL,
@@ -26,6 +27,7 @@ export class CreateBatch1675638465885 implements MigrationInterface {
                 CREATE TABLE IF NOT EXISTS batch(
                     id SERIAL PRIMARY KEY,
                     sku           TEXT    NOT NULL,
+                    "productId"   INT     NOT NULL,
                     quantity      INT     NOT NULL,
                     reference     TEXT    NOT NULL,
                     eta           TIMESTAMP NOT NULL,

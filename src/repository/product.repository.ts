@@ -8,9 +8,16 @@ import {
     Repository,
     UpdateDateColumn,
 } from 'typeorm';
-import { Batch, IOrderLine, IProduct, Product } from '$/model/index';
+import {
+    Batch,
+    IBatch,
+    IOrderLine,
+    IProduct,
+    OrderLine,
+    Product,
+} from '$/model/index';
 import { ProductRepo } from '$/types/index';
-import { BatchRepository } from './batch.repository.js';
+import { BatchEntity, BatchRepository } from './batch.repository.js';
 
 export class ProductRepository
     extends Repository<ProductEntity>
@@ -61,21 +68,77 @@ export class ProductRepository
             throw new Error(`Query runner not found`);
         }
 
-        const product = await this.findOne({
-            where: { sku },
-            relations: {
-                batches: true,
-            },
-        });
-        if (!product) {
+        console.log(Object.keys(this.queryRunner));
+        console.log(this.queryRunner.connection.driver.options);
+
+        const isPostgres =
+            this.queryRunner.connection.driver.options.type === 'postgres';
+
+        const aggregationFunction = isPostgres
+            ? 'json_agg'
+            : 'json_group_array';
+        const jsonFunction = isPostgres ? 'json_build_object' : 'json_object';
+
+        const rows = await this.query(
+            `
+            SELECT 
+                p.id, p.sku, p.version, p.created, p.modified,
+                -- these json function are meant for sqlite will need to modify for pg
+                ${aggregationFunction}(${jsonFunction}(
+                    'id', b.id,
+                    'sku', b.sku,
+                    'quantity', b.quantity,
+                    'reference', b.reference,
+                    'eta', b.eta,
+                    'created', b.created,
+                    'modified', b.modified
+                )) AS "batches",
+                ${aggregationFunction}(${jsonFunction}(
+                    'id', o.id,
+                    'sku', o.sku,
+                    'quantity', o.quantity,
+                    'created', o.created,
+                    'modified', o.modified,
+                    'batchId', o."batchId"
+                )) AS "orderLines"
+            FROM product p
+            LEFT JOIN batch b ON b."productId" = p.id
+            LEFT JOIN order_line o ON o."batchId" = b.id
+            WHERE p.sku = $1
+            GROUP BY p.id
+        `,
+            [sku],
+        );
+        if (!rows.length) {
             throw new Error(`Product not found`);
         }
 
-        return product;
+        if (rows.length > 1) {
+            throw new Error(`Multiple products found`);
+        }
+
+        const raw = rows[0];
+        console.log(raw);
+
+        if (!isPostgres) {
+            raw.batches = JSON.parse(raw.batches).filter((b: any) =>
+                Boolean(b.id),
+            );
+            raw.orderLines = JSON.parse(raw.orderLines);
+        }
+
+        const batches = raw.batches.map((b: any) => {
+            const orderLines = raw.orderLines
+                .filter((o: any) => o.batchId === b.id)
+                .map((o: any) => new OrderLine(o.sku, o.quantity));
+            return new Batch(b.reference, b.sku, b.quantity, b.eta, orderLines);
+        });
+
+        return new Product(raw.sku, batches, raw.version);
     }
 }
 
-@Entity()
+@Entity({ name: 'product' })
 export class ProductEntity implements IProduct {
     @PrimaryGeneratedColumn()
     id!: number;
@@ -92,19 +155,28 @@ export class ProductEntity implements IProduct {
     @Column()
     version!: number;
 
-    @OneToMany(() => Batch, (batch) => batch.sku)
-    batches: Batch[] | undefined;
+    @OneToMany(() => BatchEntity, (batch) => batch.product)
+    batches: IBatch[] | undefined;
 
     allocate(line: IOrderLine): string {
-        const batch = this.batches?.find((b) => b.canAllocate(line));
-        if (batch) {
-            batch.allocate(line);
-            return batch.reference;
+        const batches = this.batches?.map((b) => b.toModel());
+
+        if (batches) {
+            const batch = batches.find((b) => b.canAllocate(line));
+            if (batch) {
+                batch.allocate(line);
+                return batch.reference;
+            }
         }
+
         throw new Error(`Out of stock for sku ${line.sku}`);
     }
 
     toModel(): IProduct {
         return new Product(this.sku, this.batches || [], this.version);
+    }
+
+    constructor(values?: Partial<ProductEntity>) {
+        Object.assign(this, values);
     }
 }

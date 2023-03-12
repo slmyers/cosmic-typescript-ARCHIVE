@@ -13,6 +13,7 @@ import {
     Repository,
     UpdateDateColumn,
 } from 'typeorm';
+import { ProductEntity } from './product.repository.js';
 
 export class BatchRepository
     extends Repository<BatchEntity>
@@ -23,13 +24,16 @@ export class BatchRepository
     }
 
     async allocate(batch: IBatch, orderLine: IOrderLine): Promise<IOrderLine> {
-        if (!(batch && batch.id)) {
-            throw new Error('Batch not found');
+        const batchEntity = await this.findOne({
+            where: { reference: batch.reference },
+        });
+
+        if (!batchEntity) {
+            throw new Error(`Batch ${batch.reference} not found`);
         }
 
         const orderLineEntity = new OrderLineEntity(orderLine);
-        orderLineEntity.batchId = batch.id;
-
+        orderLineEntity.batchId = batchEntity.id;
         return this.manager.save(orderLineEntity);
     }
 }
@@ -61,6 +65,13 @@ export class BatchEntity implements IBatch {
     @OneToMany(() => OrderLineEntity, (orderLine) => orderLine.batch)
     orderLines!: OrderLineEntity[];
 
+    @ManyToOne(() => ProductEntity, (product) => product.batches)
+    product!: ProductEntity;
+
+    @Column()
+    @JoinColumn()
+    productId!: number;
+
     get allocatedQuantity(): number {
         return (this.orderLines || []).reduce(
             (total, orderLine) => total + orderLine.quantity,
@@ -78,6 +89,27 @@ export class BatchEntity implements IBatch {
                 ? this.orderLines.map((ol) => ol.toModel())
                 : [],
         );
+    }
+
+    canAllocate(line: IOrderLine): boolean {
+        return (
+            this.sku === line.sku &&
+            this.quantity - this.allocatedQuantity >= line.quantity
+        );
+    }
+
+    allocate(line: IOrderLine): void {
+        if (!this.canAllocate(line)) {
+            throw new Error(
+                `Cannot allocate line ${line.sku} to batch ${this.reference}`,
+            );
+        }
+        if (!this.orderLines) {
+            this.orderLines = [];
+        }
+        if (!this.orderLines.some((ol) => ol.reference === line.reference)) {
+            this.orderLines.push(new OrderLineEntity(line));
+        }
     }
 
     constructor(values?: Partial<BatchEntity>) {

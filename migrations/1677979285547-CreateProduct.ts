@@ -45,7 +45,7 @@ export class CreateProduct1677979285547 implements MigrationInterface {
                     sku           TEXT    NOT NULL,
                     created       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     modified      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    version      INTEGER NOT NULL DEFAULT 0,
+                    version      INTEGER DEFAULT 0 NOT NULL,
                     constraint UQ_product_sku unique (sku)
                 )
             `);
@@ -54,22 +54,40 @@ export class CreateProduct1677979285547 implements MigrationInterface {
             `);
 
             await queryRunner.query(`
-                CREATE TRIGGER IF NOT EXISTS product_version_constraint
-                BEFORE UPDATE ON product
+                CREATE OR REPLACE FUNCTION product_version_update()
+                    RETURNS trigger AS
+                $BODY$
                 BEGIN
-                    SELECT 
-                        CASE
-                            WHEN (SELECT version from product where id = old.id) <> new.version THEN RAISE(ABORT, 'version mismatch')
-                        END;
+                    new.version := old.version + 1;
+                    RETURN new;
                 END;
+                $BODY$
+                LANGUAGE plpgsql;
+
+
+                CREATE TRIGGER product_version_update_trigger
+                BEFORE UPDATE ON product
+                FOR EACH ROW EXECUTE FUNCTION product_version_update();
             `);
 
             await queryRunner.query(`
-                CREATE TRIGGER IF NOT EXISTS product_version_update
-                AFTER UPDATE ON product
-                BEGIN
-                    UPDATE product SET version = version + 1 WHERE id = old.id;
-                END;
+            CREATE OR REPLACE FUNCTION product_version_constraint()
+                RETURNS trigger AS
+            $BODY$
+            BEGIN
+                SELECT 
+                    CASE
+                        WHEN (SELECT version from product where id = old.id) <> new.version THEN RAISE(ABORT, 'version mismatch')
+                    END;
+                RETURN new;
+            END;
+            $BODY$
+            LANGUAGE plpgsql;
+
+
+            CREATE TRIGGER product_version_constraint_trigger
+            BEFORE UPDATE ON product
+            FOR EACH ROW EXECUTE FUNCTION product_version_constraint();
             `);
         } else {
             throw new Error(`DB_TYPE ${dbType} not supported`);

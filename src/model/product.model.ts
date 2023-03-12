@@ -1,10 +1,10 @@
-import { Batch } from './batch.model';
+import { Batch, IBatch } from './batch.model';
 import { OrderLine } from './orderline.model';
 
 export class Product implements IProduct {
     constructor(
         public sku: string,
-        public batches: Batch[],
+        public batches: IBatch[],
         public version: number,
     ) {}
 
@@ -21,7 +21,7 @@ export class Product implements IProduct {
 
 export interface IProduct {
     sku: string;
-    batches: Batch[] | undefined;
+    batches: IBatch[] | undefined;
     version: number;
     allocate(line: OrderLine): string;
 }

@@ -114,4 +114,7 @@ export interface IBatch {
     id?: number;
     toModel(): Batch;
     orderLines: IOrderLine[];
+    canAllocate(line: IOrderLine): boolean;
+    allocate(line: IOrderLine): void;
+    allocatedQuantity: number;
 }

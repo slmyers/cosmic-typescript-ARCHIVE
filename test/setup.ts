@@ -8,16 +8,18 @@ import {
     BatchEntity,
     OrderLineEntity,
     BatchUnitOfWork,
+    ProductUnitOfWork,
+    ProductEntity,
 } from '$/repository/index';
 
 @registry([
     {
         token: 'PostgresEntities',
-        useValue: [BatchEntity, OrderLineEntity],
+        useValue: [BatchEntity, OrderLineEntity, ProductEntity],
     },
     {
         token: 'SqliteEntities',
-        useValue: [BatchEntity, OrderLineEntity],
+        useValue: [BatchEntity, OrderLineEntity, ProductEntity],
     },
     {
         token: 'env.path',
@@ -61,6 +63,10 @@ import {
     {
         token: 'BatchUoW',
         useClass: BatchUnitOfWork,
+    },
+    {
+        token: 'ProductUoW',
+        useClass: ProductUnitOfWork,
     },
 ])
 class Module {
