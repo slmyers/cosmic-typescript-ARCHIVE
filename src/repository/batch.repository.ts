@@ -1,19 +1,18 @@
-import { Batch, IBatch, IOrderLine } from '$/model/index';
+import { Batch, IBatch, IOrderLine, OrderLine } from '$/model/index';
 import { BatchRepo } from '$/types/index.js';
 import {
-    BeforeInsert,
-    BeforeUpdate,
     Column,
     CreateDateColumn,
     Entity,
     Generated,
+    JoinColumn,
+    ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
     QueryRunner,
     Repository,
     UpdateDateColumn,
 } from 'typeorm';
-import { OrderLineEntity } from './orderline.repository.js';
 
 export class BatchRepository
     extends Repository<BatchEntity>
@@ -82,6 +81,43 @@ export class BatchEntity implements IBatch {
     }
 
     constructor(values?: Partial<BatchEntity>) {
+        Object.assign(this, values);
+    }
+}
+
+@Entity({ name: 'order_line' })
+export class OrderLineEntity {
+    @PrimaryGeneratedColumn()
+    id!: number;
+
+    @Column()
+    @Generated('uuid')
+    reference!: string;
+
+    @Column()
+    sku!: string;
+
+    @Column()
+    quantity!: number;
+
+    @CreateDateColumn()
+    created!: Date;
+
+    @UpdateDateColumn()
+    modified!: Date;
+
+    @ManyToOne(() => BatchEntity, (batch) => batch.orderLines)
+    batch!: BatchEntity;
+
+    @Column()
+    @JoinColumn()
+    batchId!: number;
+
+    toModel(): OrderLine {
+        return new OrderLine(this.sku, this.quantity, this.reference);
+    }
+
+    constructor(values?: Partial<OrderLineEntity>) {
         Object.assign(this, values);
     }
 }

@@ -26,7 +26,7 @@ export class CreateProduct1677979285547 implements MigrationInterface {
                 BEGIN
                     SELECT 
                         CASE
-                            WHEN old.version <> new.version THEN RAISE(ABORT, 'version mismatch')
+                            WHEN (SELECT version from product where id = old.id) <> new.version THEN RAISE(ABORT, 'version mismatch')
                         END;
                 END;
             `);
@@ -59,7 +59,7 @@ export class CreateProduct1677979285547 implements MigrationInterface {
                 BEGIN
                     SELECT 
                         CASE
-                            WHEN old.version <> new.version THEN RAISE(ABORT, 'version mismatch')
+                            WHEN (SELECT version from product where id = old.id) <> new.version THEN RAISE(ABORT, 'version mismatch')
                         END;
                 END;
             `);

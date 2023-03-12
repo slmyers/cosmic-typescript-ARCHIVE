@@ -6,7 +6,7 @@ import { TransactionalTestContext } from '$test/TransactionalTestContext';
 import { TestModule } from '$test/setup';
 import { DataSource } from 'typeorm';
 
-describe.only('Batch Repository', function () {
+describe('Batch Repository', function () {
     let ctx: TransactionalTestContext;
     let batchRepository: BatchRepository;
 

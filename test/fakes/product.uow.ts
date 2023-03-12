@@ -81,6 +81,29 @@ export class FakeProductUnitOfWork implements UoW {
             this.errors.push(new Error(error.message));
             throw error;
         }
+        return result;
+    }
+
+    async get(sku: string): Promise<IProduct> {
+        let result = null;
+
+        try {
+            result = await this.productRepository.get(sku);
+        } catch (error: any) {
+            this.errors.push(new Error(error.message));
+            throw error;
+        }
+        return result;
+    }
+
+    async save(product: IProduct): Promise<IProduct> {
+        let result = null;
+        try {
+            result = await this.productRepository.save(product);
+        } catch (error: any) {
+            this.errors.push(new Error(error.message));
+            throw error;
+        }
 
         return result;
     }

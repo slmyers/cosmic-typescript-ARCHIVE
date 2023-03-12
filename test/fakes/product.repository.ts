@@ -4,7 +4,7 @@ import { inject, injectable } from 'tsyringe';
 
 @injectable()
 export class FakeProductRepository implements ProductRepo {
-    private products: Product[] = [];
+    private products: IProduct[] = [];
 
     constructor(@inject('FakeProducts') fakeProducts: Product[]) {
         if (fakeProducts) {
@@ -15,11 +15,18 @@ export class FakeProductRepository implements ProductRepo {
     }
 
     async allocate(product: IProduct, orderLine: IOrderLine): Promise<string> {
-        if (!(product && product.sku)) {
+        const productFound = this.products.find((p) => p.sku === product.sku);
+        if (!productFound) {
             throw new Error(`Product not found`);
         }
 
-        const batch = product.batches?.find((b) => b.canAllocate(orderLine));
+        if (productFound.version !== product.version) {
+            throw new Error(`Version mismatch`);
+        }
+
+        const batch = productFound.batches?.find((b) =>
+            b.canAllocate(orderLine),
+        );
         if (batch) {
             batch.allocate(orderLine);
             return batch.reference;
@@ -28,7 +35,25 @@ export class FakeProductRepository implements ProductRepo {
         throw new Error(`Out of stock for sku ${orderLine.sku}`);
     }
 
-    async save(product: Product): Promise<IProduct> {
+    async save(product: IProduct): Promise<IProduct> {
+        const foundProduct = this.products.findIndex(
+            (p) => p.sku === product.sku,
+        );
+        if (foundProduct >= 0) {
+            const p = this.products[foundProduct];
+            if (p.version !== product.version) {
+                throw new Error(`Version mismatch`);
+            }
+            const update = new Product(
+                product.sku,
+                p.batches
+                    ? p.batches.concat(product.batches || [])
+                    : product.batches || [],
+                p.version,
+            );
+            this.products.splice(foundProduct, 1, update);
+            return update;
+        }
         this.products.push(product);
         return product;
     }
@@ -43,6 +68,6 @@ export class FakeProductRepository implements ProductRepo {
             throw new Error(`Product not found`);
         }
 
-        return product;
+        return new Product(product.sku, product.batches || [], product.version);
     }
 }

@@ -89,6 +89,9 @@ export class ProductEntity implements IProduct {
     @UpdateDateColumn()
     modified!: Date;
 
+    @Column()
+    version!: number;
+
     @OneToMany(() => Batch, (batch) => batch.sku)
     batches: Batch[] | undefined;
 
@@ -102,6 +105,6 @@ export class ProductEntity implements IProduct {
     }
 
     toModel(): IProduct {
-        return new Product(this.sku, this.batches || [], this.modified);
+        return new Product(this.sku, this.batches || [], this.version);
     }
 }

@@ -1,5 +1,3 @@
-// exports a unit of work for batch repository
-
 import { BatchRepository } from './batch.repository';
 import { DataSource } from 'typeorm';
 import { Lifecycle, scoped } from 'tsyringe';
