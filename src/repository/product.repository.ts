@@ -68,9 +68,6 @@ export class ProductRepository
             throw new Error(`Query runner not found`);
         }
 
-        console.log(Object.keys(this.queryRunner));
-        console.log(this.queryRunner.connection.driver.options);
-
         const isPostgres =
             this.queryRunner.connection.driver.options.type === 'postgres';
 
@@ -118,7 +115,6 @@ export class ProductRepository
         }
 
         const raw = rows[0];
-        console.log(raw);
 
         if (!isPostgres) {
             raw.batches = JSON.parse(raw.batches).filter((b: any) =>

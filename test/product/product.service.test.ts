@@ -7,7 +7,7 @@ import { UoW } from '$/types/index';
 import { TransactionalTestContext } from '$test/TransactionalTestContext';
 import { DataSource, QueryRunner } from 'typeorm';
 
-describe.only('product service', function () {
+describe('product service', function () {
     describe('db uow', function () {
         let productService: ProductService;
         let testContainer: DependencyContainer;
@@ -28,7 +28,6 @@ describe.only('product service', function () {
             const p = await queryRunner.query(
                 "INSERT INTO product (sku, version) VALUES ('SMALL-TABLE', 0) RETURNING id",
             );
-            console.log(p);
 
             await queryRunner.query(
                 "INSERT INTO batch (reference, sku, quantity, eta, \"productId\") VALUES ('batch-001', 'SMALL-TABLE', 20, '2021-01-01', $1) RETURNING id",
@@ -59,7 +58,7 @@ describe.only('product service', function () {
         this.afterEach(async function () {
             await uow.rollback();
             await testContainer.dispose();
-            await ctx.finish();
+            // await ctx.finish();
         });
     });
 });
