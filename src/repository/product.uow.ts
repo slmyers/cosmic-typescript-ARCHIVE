@@ -24,11 +24,17 @@ export class ProductUnitOfWork extends AbstractTypeormUnitOfWork {
 
         try {
             result = await this.productRepository.allocate(product, orderLine);
+            // are we updating the same version we allocated?
+            const versionControl = await this.queryRunner.query(
+                `UPDATE product SET version = $1 WHERE sku = $2 AND version = $1`,
+                [result.version, product.sku],
+            );
+            console.log(versionControl); // 1 if updated, 0 if not
         } catch (error: any) {
             this.errors.push(new Error(error.message));
             throw error;
         }
-        return result;
+        return result.ref;
     }
 
     async get(sku: string): Promise<IProduct> {

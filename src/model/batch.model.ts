@@ -66,7 +66,7 @@ export class Batch implements IBatch {
      * @param batch {Batch} the batch to compare against
      * @returns {number} -1 if this batch has higher priority, 1 if the other batch has higher priority, 0 if the batches are equal
      * */
-    priority(batch: Batch): number {
+    priority(batch: IBatch): number {
         if (this.eta < batch.eta) {
             return -1;
         }
@@ -117,4 +117,6 @@ export interface IBatch {
     canAllocate(line: IOrderLine): boolean;
     allocate(line: IOrderLine): void;
     allocatedQuantity: number;
+    priority(batch: IBatch): number;
+    availableQuantity: number;
 }

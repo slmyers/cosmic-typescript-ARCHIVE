@@ -1,14 +1,6 @@
+import { Entity, QueryRunner, Repository } from 'typeorm';
 import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    OneToMany,
-    PrimaryGeneratedColumn,
-    QueryRunner,
-    Repository,
-    UpdateDateColumn,
-} from 'typeorm';
-import {
+    allocate,
     Batch,
     IBatch,
     IOrderLine,
@@ -16,19 +8,73 @@ import {
     OrderLine,
     Product,
 } from '$/model/index';
-import { ProductRepo } from '$/types/index';
-import { BatchEntity, BatchRepository } from './batch.repository.js';
+import { ProductRepo, ProductAllocation } from '$/types/index';
 
 export class ProductRepository
     extends Repository<ProductEntity>
     implements ProductRepo
 {
+    private isPostgres: boolean;
+    private isSqlite: boolean;
+
     constructor(queryRunnner: QueryRunner) {
         super(ProductEntity, queryRunnner.manager, queryRunnner);
+        this.isPostgres =
+            queryRunnner.connection.driver.options.type === 'postgres';
+        this.isSqlite =
+            queryRunnner.connection.driver.options.type === 'sqlite';
+
+        if (!(this.isPostgres || this.isSqlite)) {
+            throw new Error(
+                `Unsupported database type: ${queryRunnner.connection.driver.options.type}`,
+            );
+        }
+    }
+
+    get agg(): string {
+        return this.isPostgres
+            ? 'json_agg'
+            : this.isSqlite
+            ? 'json_group_array'
+            : '';
+    }
+
+    get obj(): string {
+        return this.isPostgres
+            ? 'json_build_object'
+            : this.isSqlite
+            ? 'json_object'
+            : '';
+    }
+
+    async addOrderLine(
+        orderLine: IOrderLine,
+        batchId: number,
+    ): Promise<number> {
+        if (!orderLine) {
+            throw new Error(`Order line not supplied.`);
+        }
+        if (!this.queryRunner) {
+            throw new Error(`Query runner not found`);
+        }
+
+        const res = await this.queryRunner.query(
+            `
+                INSERT INTO order_line (sku, quantity, batch_id)
+                VALUES ($1, $2, $3)
+                RETURNING id
+            `,
+            [orderLine.sku, orderLine.quantity, batchId],
+        );
+
+        return this.isPostgres ? res[0].id : this.isSqlite ? res[0] : 0;
     }
 
     // allocate an order line to a product
-    async allocate(product: IProduct, orderLine: IOrderLine): Promise<string> {
+    async allocate(
+        product: IProduct,
+        orderLine: IOrderLine,
+    ): Promise<ProductAllocation> {
         if (!(product && product.sku)) {
             throw new Error(`Product not found`);
         }
@@ -37,51 +83,50 @@ export class ProductRepository
             throw new Error(`Query runner not found`);
         }
 
-        const ref = product.allocate(orderLine);
-        if (ref) {
-            // it's diffiuclt to inject the BatchRepository because it has a depndency on the QueryRunner which
-            // is initialized in the UnitOfWork, that calls this repository. We need a way for the UoW to provide
-            // the QueryRunner to the repository OR we could use a factory to create the repository and pass the
-            // QueryRunner to the factory.
-            // reaguardless, we need to find a way to inject the BatchRepository into this repo.
-            const batchRepository = new BatchRepository(this.queryRunner);
-            const batch = product.batches?.find((b) => b.reference === ref);
-            if (!batch) {
-                throw new Error(
-                    `Batch ${ref} not found for product ${product.sku}`,
-                );
-            }
-            await batchRepository.allocate(batch, orderLine);
-            return batch.reference;
+        const p = await this.get(product.sku);
+
+        if (!(p.batches && p.batches.length)) {
+            throw new Error(`No batches found for product ${product.sku}`);
         }
 
-        throw new Error(`Out of stock for sku ${orderLine.sku}`);
+        const batches = p.batches.sort((a, b) => a.priority(b));
+
+        const ref = allocate(orderLine, batches);
+
+        if (ref) {
+            const batch = batches.find((b: IBatch) => b.reference === ref);
+            if (batch && batch.id) {
+                const orderId = await this.addOrderLine(orderLine, batch.id);
+                if (!orderId) {
+                    throw new Error(`Unable to add order line`);
+                }
+            }
+        }
+
+        return {
+            version: p.version,
+            ref,
+        };
     }
 
     // get a product by sku
     async get(sku: string): Promise<IProduct> {
         if (!sku) {
-            throw new Error(`Product not found`);
+            throw new Error(`Product sku not supplied.`);
         }
 
         if (!this.queryRunner) {
             throw new Error(`Query runner not found`);
         }
 
-        const isPostgres =
-            this.queryRunner.connection.driver.options.type === 'postgres';
-
-        const aggregationFunction = isPostgres
-            ? 'json_agg'
-            : 'json_group_array';
-        const jsonFunction = isPostgres ? 'json_build_object' : 'json_object';
+        const { agg, obj } = this;
 
         const rows = await this.query(
             `
             SELECT 
                 p.id, p.sku, p.version, p.created, p.modified,
                 -- these json function are meant for sqlite will need to modify for pg
-                ${aggregationFunction}(${jsonFunction}(
+                ${agg}(${obj}(
                     'id', b.id,
                     'sku', b.sku,
                     'quantity', b.quantity,
@@ -90,7 +135,7 @@ export class ProductRepository
                     'created', b.created,
                     'modified', b.modified
                 )) AS "batches",
-                ${aggregationFunction}(${jsonFunction}(
+                ${agg}(${obj}(
                     'id', o.id,
                     'sku', o.sku,
                     'quantity', o.quantity,
@@ -116,7 +161,7 @@ export class ProductRepository
 
         const raw = rows[0];
 
-        if (!isPostgres) {
+        if (this.isSqlite) {
             raw.batches = JSON.parse(raw.batches).filter((b: any) =>
                 Boolean(b.id),
             );
@@ -135,44 +180,6 @@ export class ProductRepository
 }
 
 @Entity({ name: 'product' })
-export class ProductEntity implements IProduct {
-    @PrimaryGeneratedColumn()
-    id!: number;
-
-    @Column()
-    sku!: string;
-
-    @CreateDateColumn()
-    created!: Date;
-
-    @UpdateDateColumn()
-    modified!: Date;
-
-    @Column()
-    version!: number;
-
-    @OneToMany(() => BatchEntity, (batch) => batch.product)
-    batches: IBatch[] | undefined;
-
-    allocate(line: IOrderLine): string {
-        const batches = this.batches?.map((b) => b.toModel());
-
-        if (batches) {
-            const batch = batches.find((b) => b.canAllocate(line));
-            if (batch) {
-                batch.allocate(line);
-                return batch.reference;
-            }
-        }
-
-        throw new Error(`Out of stock for sku ${line.sku}`);
-    }
-
-    toModel(): IProduct {
-        return new Product(this.sku, this.batches || [], this.version);
-    }
-
-    constructor(values?: Partial<ProductEntity>) {
-        Object.assign(this, values);
-    }
+export class ProductEntity {
+    /* going to remove typeorm */
 }

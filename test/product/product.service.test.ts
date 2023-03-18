@@ -58,7 +58,7 @@ describe('product service', function () {
         this.afterEach(async function () {
             await uow.rollback();
             await testContainer.dispose();
-            // await ctx.finish();
+            await ctx.finish();
         });
     });
 });

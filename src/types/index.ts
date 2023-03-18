@@ -19,9 +19,14 @@ export interface BatchRepo {
     count(options: FindManyOptions<IBatch>): Promise<number>;
 }
 
+export type ProductAllocation = {
+    ref: string;
+    version: number;
+};
+
 export interface ProductRepo {
     save(product: IProduct): Promise<IProduct>;
-    allocate(product: IProduct, orderLine: IOrderLine): Promise<string>;
+    allocate(product: IProduct, orderLine: IOrderLine): Promise<ProductAllocation>;
     get(sku: string): Promise<IProduct>;
 }
 

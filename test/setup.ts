@@ -4,22 +4,16 @@ import path from 'path';
 import { TransactionalTestContext } from './TransactionalTestContext';
 import { container, registry } from 'tsyringe';
 import { DataSource, EntityManager } from 'typeorm';
-import {
-    BatchEntity,
-    OrderLineEntity,
-    BatchUnitOfWork,
-    ProductUnitOfWork,
-    ProductEntity,
-} from '$/repository/index';
+import { ProductUnitOfWork, ProductEntity } from '$/repository/index';
 
 @registry([
     {
         token: 'PostgresEntities',
-        useValue: [BatchEntity, OrderLineEntity, ProductEntity],
+        useValue: [ProductEntity],
     },
     {
         token: 'SqliteEntities',
-        useValue: [BatchEntity, OrderLineEntity, ProductEntity],
+        useValue: [ProductEntity],
     },
     {
         token: 'env.path',
@@ -59,10 +53,6 @@ import {
         useFactory(dependencyContainer) {
             return dependencyContainer.resolve(DataSource).manager;
         },
-    },
-    {
-        token: 'BatchUoW',
-        useClass: BatchUnitOfWork,
     },
     {
         token: 'ProductUoW',
