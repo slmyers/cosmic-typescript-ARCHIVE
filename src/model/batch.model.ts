@@ -7,13 +7,17 @@ export class Batch implements IBatch {
         public sku: string,
         public quantity: number,
         public eta: Date,
-        public orderLines: IOrderLine[] = [],
+        public options: any = {
+            orderLines: [],
+            id: undefined,
+        },
     ) {
         this._allocatedLines = new Map<string, IOrderLine>();
-        for (const line of orderLines) {
+        for (const line of options.orderLines) {
             this._allocatedLines.set(line.reference, line);
         }
     }
+    id?: number | undefined;
     /**
      * determines if a line can be allocated to this batch
      * will not allocate more than available
@@ -111,9 +115,8 @@ export interface IBatch {
     sku: string;
     quantity: number;
     eta: Date;
-    id?: number;
+    options: any;
     toModel(): Batch;
-    orderLines: IOrderLine[];
     canAllocate(line: IOrderLine): boolean;
     allocate(line: IOrderLine): void;
     allocatedQuantity: number;

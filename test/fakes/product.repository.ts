@@ -1,5 +1,5 @@
 import { IOrderLine, IProduct, Product } from '$/model/index';
-import { ProductRepo } from '$/types/index';
+import { ProductRepo, ProductAllocation } from '$/types/index';
 import { inject, injectable } from 'tsyringe';
 
 @injectable()
@@ -14,7 +14,10 @@ export class FakeProductRepository implements ProductRepo {
         }
     }
 
-    async allocate(product: IProduct, orderLine: IOrderLine): Promise<string> {
+    async allocate(
+        product: IProduct,
+        orderLine: IOrderLine,
+    ): Promise<ProductAllocation> {
         const productFound = this.products.find((p) => p.sku === product.sku);
         if (!productFound) {
             throw new Error(`Product not found`);
@@ -29,7 +32,10 @@ export class FakeProductRepository implements ProductRepo {
         );
         if (batch) {
             batch.allocate(orderLine);
-            return batch.reference;
+            return {
+                version: productFound.version,
+                ref: batch.reference,
+            };
         }
 
         throw new Error(`Out of stock for sku ${orderLine.sku}`);

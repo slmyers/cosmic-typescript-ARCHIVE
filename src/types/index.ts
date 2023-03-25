@@ -52,6 +52,7 @@ export interface UoW {
     get committed() : boolean;
     get rolledback() : boolean;
     get released() : boolean;
+    getState(): string[];
 }
 
 export interface BatchUoW extends UoW {

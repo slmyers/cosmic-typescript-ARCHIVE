@@ -62,4 +62,8 @@ export abstract class FakeUnitOfWork implements UoW {
     async release(): Promise<void> {
         this.state.unshift('released');
     }
+
+    getState(): string[] {
+        return this.state;
+    }
 }

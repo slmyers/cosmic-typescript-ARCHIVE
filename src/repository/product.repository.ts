@@ -1,4 +1,9 @@
-import { Entity, QueryRunner, Repository } from 'typeorm';
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    QueryRunner,
+    Repository,
+} from 'typeorm';
 import {
     allocate,
     Batch,
@@ -60,11 +65,11 @@ export class ProductRepository
 
         const res = await this.queryRunner.query(
             `
-                INSERT INTO order_line (sku, quantity, batch_id)
-                VALUES ($1, $2, $3)
+                INSERT INTO order_line (sku, quantity, "batchId", reference)
+                VALUES ($1, $2, $3, $4)
                 RETURNING id
             `,
-            [orderLine.sku, orderLine.quantity, batchId],
+            [orderLine.sku, orderLine.quantity, batchId, orderLine.reference],
         );
 
         return this.isPostgres ? res[0].id : this.isSqlite ? res[0] : 0;
@@ -90,16 +95,21 @@ export class ProductRepository
         }
 
         const batches = p.batches.sort((a, b) => a.priority(b));
-
-        const ref = allocate(orderLine, batches);
+        const ref = p.allocate(orderLine);
 
         if (ref) {
             const batch = batches.find((b: IBatch) => b.reference === ref);
-            if (batch && batch.id) {
-                const orderId = await this.addOrderLine(orderLine, batch.id);
+            // TODO: when we remove typeorm we shouldn't have a dependency on id
+            if (batch && batch.options.id) {
+                const orderId = await this.addOrderLine(
+                    orderLine,
+                    batch.options.id,
+                );
                 if (!orderId) {
                     throw new Error(`Unable to add order line`);
                 }
+            } else {
+                throw new Error(`Unable to find batch`);
             }
         }
 
@@ -147,7 +157,7 @@ export class ProductRepository
             LEFT JOIN batch b ON b."productId" = p.id
             LEFT JOIN order_line o ON o."batchId" = b.id
             WHERE p.sku = $1
-            GROUP BY p.id
+            GROUP BY p.id;
         `,
             [sku],
         );
@@ -172,7 +182,10 @@ export class ProductRepository
             const orderLines = raw.orderLines
                 .filter((o: any) => o.batchId === b.id)
                 .map((o: any) => new OrderLine(o.sku, o.quantity));
-            return new Batch(b.reference, b.sku, b.quantity, b.eta, orderLines);
+            return new Batch(b.reference, b.sku, b.quantity, b.eta, {
+                orderLines,
+                id: b.id,
+            });
         });
 
         return new Product(raw.sku, batches, raw.version);
@@ -182,4 +195,6 @@ export class ProductRepository
 @Entity({ name: 'product' })
 export class ProductEntity {
     /* going to remove typeorm */
+    @PrimaryGeneratedColumn()
+    id!: number;
 }

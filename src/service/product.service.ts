@@ -9,10 +9,16 @@ export class ProductService {
     ) {}
 
     async allocate(orderLine: IOrderLine): Promise<string> {
-        const product = await this.productUoW.get(orderLine.sku);
-        if (!product) {
-            throw new Error(`Product ${orderLine.sku} not found`);
+        const ref = await this.productUoW.allocate(orderLine);
+
+        if (!ref) {
+            throw new Error(`Unable to allocate for sku ${orderLine.sku}`);
         }
-        return await this.productUoW.allocate(product, orderLine);
+
+        return ref;
+    }
+
+    get unitOfWork(): ProductUnitOfWork {
+        return this.productUoW;
     }
 }

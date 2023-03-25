@@ -22,7 +22,7 @@ export class FakeProductUnitOfWork extends FakeUnitOfWork {
             this.errors.push(new Error(error.message));
             throw error;
         }
-        return result;
+        return result.ref;
     }
 
     async get(sku: string): Promise<IProduct> {
@@ -47,5 +47,9 @@ export class FakeProductUnitOfWork extends FakeUnitOfWork {
         }
 
         return result;
+    }
+
+    getState(): string[] {
+        return this.state;
     }
 }

@@ -15,7 +15,6 @@ let SqliteDataSource: DataSource;
             PostgresDataSource = new DataSource({
                 ...env.pgEnv,
                 entities: dependencyContainer.resolve('PostgresEntities'),
-                // logging: true,
             });
             return PostgresDataSource;
         },
@@ -29,7 +28,6 @@ let SqliteDataSource: DataSource;
             SqliteDataSource = new DataSource({
                 ...env.sqliteEnv,
                 entities: dependencyContainer.resolve('SqliteEntities'),
-                // logging: true,
             });
             return SqliteDataSource;
         },

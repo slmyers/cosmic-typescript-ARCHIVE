@@ -17,7 +17,7 @@ import { ProductUnitOfWork, ProductEntity } from '$/repository/index';
     },
     {
         token: 'env.path',
-        useValue: path.join('/mnt/e/cosmic-typescript/', 'config', 'test.env'),
+        useValue: path.join('/mnt/e/cosmic-typescript/', 'config', 'dev.env'),
     },
     {
         token: 'shared.path',
@@ -29,7 +29,7 @@ import { ProductUnitOfWork, ProductEntity } from '$/repository/index';
     },
     {
         token: DataSource,
-        useToken: 'SqliteDataSource',
+        useToken: 'PostgresDataSource',
     },
     {
         token: TransactionalTestContext,
