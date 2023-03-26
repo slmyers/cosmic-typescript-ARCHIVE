@@ -37,6 +37,13 @@ export type workState =
     | 'rolledback'
     | 'released';
 
+export type concurrencyControlStrategy = 'PESSIMISTIC' | 'OPTIMISTIC';
+
+export type ProductLock = {
+    sku: string;
+    version: number;
+}
+
 export interface UoW {
     state: workState[];
     // batchRepository: BatchRepo;
@@ -58,4 +65,22 @@ export interface UoW {
 export interface BatchUoW extends UoW {
     batchRepository: BatchRepo;
     allocate(batch: IBatch, orderLine: IOrderLine): Promise<IOrderLine>;
+}
+
+export type Config = {
+    DB_TYPE: string;
+    DB_USER: string;
+    DB_DATABASE: string;
+    DB_PASSWORD: string;
+    DB_CONNECTION_STRING: string;
+    DB_PORT: number;
+    DB_HOST: string;
+    NODE_ENV: string;
+    PROJECT_ROOT: string;
+    BUILD_DIR: string;
+    MIGRATION_DIR: string;
+
+    ALLOCATE_BATCH_SIZE: number;
+    DB_LOGGING?: boolean;
+    CONCURRENCY_CONTROL_STRATEGY?: concurrencyControlStrategy;
 }

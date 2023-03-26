@@ -4,7 +4,6 @@ export abstract class FakeUnitOfWork implements UoW {
     state: workState[] = [];
     errors: Error[] = [];
 
-    // these methods should be inheritied from the abstract class
     async init(): Promise<void> {
         if (this.released || this.committed || this.rolledback) {
             throw new Error('UnitOfWork is already disposed');

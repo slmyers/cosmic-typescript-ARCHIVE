@@ -4,12 +4,20 @@ import dotenv from 'dotenv';
 
 @singleton()
 export class EnvironmentSingleton {
+    private override;
+
     constructor(
         @inject('env.path') envPath: string,
         @inject('shared.path') sharedPath: string,
+        @inject('env.override') override: Map<string, string>,
     ) {
         dotenv.config({ path: sharedPath });
         dotenv.config({ path: envPath, override: true });
+        if (override) {
+            this.override = new Map(override);
+        } else {
+            this.override = new Map();
+        }
     }
     static self(
         service?: EnvironmentSingleton,
@@ -24,7 +32,7 @@ export class EnvironmentSingleton {
     }
 
     get(key: string): string {
-        const value = process.env[key];
+        const value = this.override.get(key) || process.env[key];
         if (value === undefined) {
             throw new Error(`Missing environment variable: ${key}`);
         }
@@ -58,5 +66,11 @@ export class EnvironmentSingleton {
 
     get nodeEnv(): string {
         return EnvironmentSingleton.self(this).get('NODE_ENV');
+    }
+
+    get concurrencyControlStrategy(): string {
+        return EnvironmentSingleton.self(this).get(
+            'CONCURRENCY_CONTROL_STRATEGY',
+        );
     }
 }

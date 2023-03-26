@@ -15,7 +15,6 @@ export abstract class AbstractTypeormUnitOfWork implements UoW {
         this.state.unshift('init');
         this.queryRunner = this.dataSource.createQueryRunner();
         this.id = randomUUID();
-        this.validations = [];
         // console.log('creating...', this.id);
     }
 
@@ -111,10 +110,6 @@ export abstract class AbstractTypeormUnitOfWork implements UoW {
 
     get released() {
         return this.state.includes('released');
-    }
-
-    addCommitValidation(validation: () => Promise<void>) {
-        this.validations.push(validation);
     }
 
     getState() {

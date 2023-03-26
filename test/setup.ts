@@ -24,6 +24,10 @@ import { ProductUnitOfWork, ProductEntity } from '$/repository/index';
         ),
     },
     {
+        token: 'env.override',
+        useValue: new Map(),
+    },
+    {
         token: DataSource,
         useToken: 'PostgresDataSource',
     },

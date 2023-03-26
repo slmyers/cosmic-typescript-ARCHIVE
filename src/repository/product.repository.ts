@@ -55,7 +55,6 @@ export class ProductRepository
         return res[0]?.id;
     }
 
-    // allocate an order line to a product
     async allocate(
         product: IProduct,
         orderLine: IOrderLine,
@@ -99,7 +98,6 @@ export class ProductRepository
         };
     }
 
-    // get a product by sku
     async get(sku: string): Promise<IProduct> {
         if (!sku) {
             throw new Error(`Product sku not supplied.`);
