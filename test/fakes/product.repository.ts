@@ -14,17 +14,10 @@ export class FakeProductRepository implements ProductRepo {
         }
     }
 
-    async allocate(
-        product: IProduct,
-        orderLine: IOrderLine,
-    ): Promise<ProductAllocation> {
-        const productFound = this.products.find((p) => p.sku === product.sku);
+    async allocate(orderLine: IOrderLine): Promise<ProductAllocation> {
+        const productFound = this.products.find((p) => p.sku === orderLine.sku);
         if (!productFound) {
             throw new Error(`Product not found`);
-        }
-
-        if (productFound.version !== product.version) {
-            throw new Error(`Version mismatch`);
         }
 
         const batch = productFound.batches?.find((b) =>

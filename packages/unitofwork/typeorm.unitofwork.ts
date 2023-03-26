@@ -1,118 +1,46 @@
-import { UoW, workState } from '$/types/index';
-import { randomUUID } from 'crypto';
 import { DataSource, QueryRunner } from 'typeorm';
+import { interpret } from 'xstate';
+import { BaseUnitOfWork } from './base.unitofwork.js';
+import machineFactory from './machine.unitofwork.factory';
 
-export abstract class AbstractTypeormUnitOfWork implements UoW {
+export abstract class AbstractTypeormUnitOfWork extends BaseUnitOfWork {
+    baseService: any;
     queryRunner: QueryRunner;
-    id;
-    validations: (() => Promise<void>)[] = [];
 
-    constructor(
-        private readonly dataSource: DataSource,
-        public state: workState[],
-        public errors: Error[],
-    ) {
-        this.state.unshift('init');
+    constructor(private readonly dataSource: DataSource) {
+        super();
         this.queryRunner = this.dataSource.createQueryRunner();
-        this.id = randomUUID();
-        // console.log('creating...', this.id);
     }
 
-    async rollback() {
-        // console.log('rolling back...', this.id);
-        if (!(this.queryRunner && this.connected)) {
-            return;
-        }
-        await this.queryRunner.rollbackTransaction();
-        this.state.unshift('rolledback');
+    async init(): Promise<void> {
+        this.baseService = interpret(
+            machineFactory(this.id, { actions: this.actions }),
+        ).start();
+        await this.queryRunner.connect();
+        await super.init();
     }
 
-    async commit() {
-        // console.log('commit called...', this.id, this.state, this.errors);
-        if (!(this.queryRunner && this.connected)) {
-            await this.init();
-        }
-        await this.queryRunner.commitTransaction();
-        this.state.unshift('committed');
-        // console.log('commiting...', this.id);
-    }
-
-    async release() {
-        if (!(this.queryRunner && this.connected)) {
-            return;
-        }
-        await this.queryRunner.release();
-        this.state.unshift('released');
-        // console.log('releasing...', this.id);
-    }
-
-    async dispose() {
-        if (!(this.queryRunner && this.connected)) {
-            return;
-        }
-
-        if (this.committed || this.rolledback) {
-            return this.release();
-        }
-
-        if (this.errors.length > 0) {
-            await this.rollback();
-        } else if (this.queryRunner.isTransactionActive) {
-            await this.commit();
-        }
-
-        if (!this.released && this.connected) {
-            await this.release();
-        }
-    }
-    async init() {
-        if (!this.queryRunner) {
-            throw new Error('QueryRunner is not defined');
-        }
-
-        if (this.released || this.committed || this.rolledback) {
-            throw new Error('UnitOfWork is already disposed');
-        }
-
-        if (!this.connected) {
-            await this.queryRunner.connect();
-            // console.log('connecting...', this.id);
-        } else {
-            // console.log('already connected! ', this.id);
-        }
-
-        if (!this.queryRunner.isTransactionActive) {
-            await this.queryRunner.startTransaction();
-            // console.log('starting transaction...', this.id);
-        } else {
-            // console.log('already in a transaction!', this.id);
-        }
-
-        if (this.queryRunner.isTransactionActive) {
-            this.state.unshift('connected');
-        }
-    }
-    get connected() {
-        return this.state.includes('connected');
-    }
-
-    get initialized() {
-        return this.state.includes('init');
-    }
-
-    get committed() {
-        return this.state.includes('committed');
-    }
-
-    get rolledback() {
-        return this.state.includes('rolledback');
-    }
-
-    get released() {
-        return this.state.includes('released');
-    }
-
-    getState() {
-        return [this.id, ...this.state];
+    private get actions() {
+        return {
+            init: () => {
+                // console.log('init', this.id);
+            },
+            connect: async () => {
+                // console.log('connect', this.id);
+                await this.queryRunner.startTransaction();
+            },
+            commit: async () => {
+                // console.log('commit', this.id);
+                await this.queryRunner.commitTransaction();
+            },
+            rollback: async () => {
+                // console.log('rollback', this.id);
+                await this.queryRunner.rollbackTransaction();
+            },
+            release: async () => {
+                // console.log('release', this.id);
+                await this.queryRunner.release();
+            },
+        };
     }
 }

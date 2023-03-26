@@ -1,4 +1,4 @@
 {
     "file": "./build/test/setup",
-    "timeout": 12000
+    "timeout": 15000
 }

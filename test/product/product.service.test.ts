@@ -1,8 +1,12 @@
 import { expect } from 'chai';
 import { DependencyContainer, container } from 'tsyringe';
 import { ProductService } from '$/service/index';
-import { OrderLine } from '$/model/index';
+import { OrderLine, Product, IBatch, Batch } from '$/model/index';
 import { TestModule } from '$test/setup';
+import {
+    FakeProductUnitOfWork,
+    FakeProductRepository,
+} from '$test/fakes/index';
 import { TransactionalTestContext } from '$test/TransactionalTestContext';
 import { DataSource, QueryRunner } from 'typeorm';
 
@@ -54,27 +58,26 @@ describe('product service', function () {
                 productService
                     .allocate(new OrderLine('SMALL-TABLE', 10, 'order1'))
                     .then(async (ref) => {
-                        await productService.unitOfWork.dispose();
+                        await sleep(100);
+                        await productService.unitOfWork.commit();
                         return ref;
                     })
                     .catch(async (e: any) => {
-                        await productService.unitOfWork.dispose();
                         return e.message;
                     }),
-                productService2
-                    .allocate(new OrderLine('SMALL-TABLE', 15, 'order2'))
-                    .then(async (ref) => {
-                        await productService2.unitOfWork.dispose();
-                        return ref;
-                    })
-                    .catch(async (e: any) => {
-                        await productService2.unitOfWork.dispose();
-                        return e.message;
-                    }),
+                sleep(5).then(() =>
+                    productService2
+                        .allocate(new OrderLine('SMALL-TABLE', 15, 'order2'))
+                        .catch(async (e: any) => {
+                            return e.message;
+                        }),
+                ),
             ]);
-            expect(refs.includes('batch-001')).to.be.true;
-            expect(refs.includes('Out of stock for sku SMALL-TABLE')).to.be
-                .true;
+            expect(refs.includes('batch-001'), JSON.stringify(refs)).to.be.true;
+            expect(
+                refs.includes('Unable to allocate for sku SMALL-TABLE'),
+                JSON.stringify(refs),
+            ).to.be.true;
 
             expect(productService.unitOfWork.getState().includes('committed'));
             expect(
@@ -83,8 +86,16 @@ describe('product service', function () {
 
             const orders = await queryRunner.query('SELECT * FROM order_line');
             expect(orders.length).to.equal(1);
-            const [{ sku: orderSku }] = orders;
-            expect(orderSku).to.equal('SMALL-TABLE');
+            const [o] = orders;
+            expect({
+                sku: o.sku,
+                quantity: o.quantity,
+                reference: o.reference,
+            }).to.deep.equal({
+                sku: 'SMALL-TABLE',
+                quantity: 10,
+                reference: 'order1',
+            });
         });
 
         it('can not allocate to the same product from different processes x2', async function () {
@@ -92,19 +103,25 @@ describe('product service', function () {
                 productService2
                     .allocate(new OrderLine('SMALL-TABLE', 15, 'order3'))
                     .catch(async (e: any) => {
+                        await sleep(100);
                         await productService2.unitOfWork.dispose();
                         return e.message;
                     }),
-                productService
-                    .allocate(new OrderLine('SMALL-TABLE', 5, 'order4'))
-                    .then(async (ref) => {
-                        await productService.unitOfWork.dispose();
-                        return ref;
-                    }),
+                sleep(5).then(() =>
+                    productService
+                        .allocate(new OrderLine('SMALL-TABLE', 5, 'order4'))
+                        .then(async (ref) => {
+                            await productService.unitOfWork.commit();
+                            return ref;
+                        }),
+                ),
             ]);
-            expect(refs.includes('batch-001')).to.be.true;
-            expect(refs.includes('Out of stock for sku SMALL-TABLE')).to.be
-                .true;
+
+            expect(refs.includes('batch-001'), JSON.stringify(refs)).to.be.true;
+            expect(
+                refs.includes('Unable to allocate for sku SMALL-TABLE'),
+                JSON.stringify(refs),
+            ).to.be.true;
 
             expect(productService.unitOfWork.getState().includes('committed'));
             expect(
@@ -217,7 +234,9 @@ describe('product service', function () {
                 );
                 throw new Error('should not get here');
             } catch (e: any) {
-                expect(e.message).to.equal('Out of stock for sku SMALL-TABLE');
+                expect(e.message).to.equal(
+                    'Unable to allocate for sku SMALL-TABLE',
+                );
             }
         });
 
@@ -227,4 +246,75 @@ describe('product service', function () {
             await queryRunner.release();
         });
     });
+
+    describe('fake uow', function () {
+        let products: Product[];
+        let batches: IBatch[][];
+
+        this.beforeEach(function () {
+            createBatches();
+            createProducts();
+            registerContainer();
+            productService = testContainer.resolve(ProductService);
+        });
+
+        this.afterEach(function () {
+            void testContainer.dispose();
+        });
+
+        it('can allocate to a batch', async function () {
+            // test the service will allocate to the batch
+            const ref = await productService.allocate(
+                new OrderLine('SMALL-TABLE', 20, 'order-001'),
+            );
+            expect(ref).to.equal('batch-001');
+
+            const products: Product[] = testContainer.resolve('FakeProducts');
+            const batches = products[0].batches;
+            expect(
+                batches.some((batch: IBatch) => batch.availableQuantity === 0),
+            ).to.be.true;
+            expect(productService.unitOfWork.getState()).to.deep.equal(
+                '"connected"',
+            );
+            void testContainer.dispose();
+            expect(productService.unitOfWork.getState()).to.deep.equal(
+                '"released"',
+            );
+        });
+
+        function registerContainer() {
+            testContainer = container.createChildContainer();
+            testContainer.register('ProductUoW', FakeProductUnitOfWork);
+            testContainer.register('FakeProducts', {
+                useValue: products,
+            });
+            testContainer.register(
+                FakeProductRepository,
+                FakeProductRepository,
+            );
+        }
+
+        function createBatches() {
+            batches = [
+                [
+                    new Batch('batch-001', 'SMALL-TABLE', 20, new Date()),
+                    new Batch('batch-002', 'SMALL-TABLE', 20, new Date()),
+                    new Batch('batch-003', 'SMALL-TABLE', 20, new Date()),
+                ],
+                [new Batch('batch-004', 'MEDIUM-TABLE', 20, new Date())],
+            ];
+        }
+
+        function createProducts() {
+            products = [
+                new Product('SMALL-TABLE', batches[0], 1),
+                new Product('MEDIUM-TABLE', batches[1], 1),
+            ];
+        }
+    });
 });
+
+async function sleep(ms = 100) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}

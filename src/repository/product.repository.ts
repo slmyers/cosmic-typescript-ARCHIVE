@@ -55,22 +55,17 @@ export class ProductRepository
         return res[0]?.id;
     }
 
-    async allocate(
-        product: IProduct,
-        orderLine: IOrderLine,
-    ): Promise<ProductAllocation> {
-        if (!(product && product.sku)) {
-            throw new Error(`Product not found`);
-        }
-
+    async allocate(orderLine: IOrderLine): Promise<ProductAllocation> {
         if (!this.queryRunner) {
             throw new Error(`Query runner not found`);
         }
 
-        const p = await this.get(product.sku);
+        const p = await this.get(orderLine.sku);
+
+        // console.log(p);
 
         if (!(p.batches && p.batches.length)) {
-            throw new Error(`No batches found for product ${product.sku}`);
+            throw new Error(`No batches found for product ${orderLine.sku}`);
         }
 
         const batches = p.batches.sort((a, b) => a.priority(b));

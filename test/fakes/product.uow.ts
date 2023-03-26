@@ -10,16 +10,21 @@ export class FakeProductUnitOfWork extends FakeUnitOfWork {
         readonly productRepository: FakeProductRepository,
     ) {
         super();
-        void this.init();
     }
 
-    async allocate(product: IProduct, orderLine: IOrderLine): Promise<string> {
+    async allocate(orderLine: IOrderLine): Promise<string> {
         let result = null;
 
+        const product = await this.get(orderLine.sku);
+
+        if (!product) {
+            throw new Error(`Product ${orderLine.sku} not found`);
+        }
+
         try {
-            result = await this.productRepository.allocate(product, orderLine);
+            result = await this.productRepository.allocate(orderLine);
         } catch (error: any) {
-            this.errors.push(new Error(error.message));
+            await super.rollback();
             throw error;
         }
         return result.ref;
@@ -31,7 +36,7 @@ export class FakeProductUnitOfWork extends FakeUnitOfWork {
         try {
             result = await this.productRepository.get(sku);
         } catch (error: any) {
-            this.errors.push(new Error(error.message));
+            await super.rollback();
             throw error;
         }
         return result;
@@ -42,14 +47,10 @@ export class FakeProductUnitOfWork extends FakeUnitOfWork {
         try {
             result = await this.productRepository.save(product);
         } catch (error: any) {
-            this.errors.push(new Error(error.message));
+            await super.rollback();
             throw error;
         }
 
         return result;
-    }
-
-    getState(): string[] {
-        return this.state;
     }
 }

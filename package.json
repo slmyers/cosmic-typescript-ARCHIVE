@@ -36,7 +36,8 @@
         "reflect-metadata": "^0.1.13",
         "tsyringe": "^4.7.0",
         "typeorm": "^0.3.11",
-        "uuid": "^9.0.0"
+        "uuid": "^9.0.0",
+        "xstate": "^4.37.1"
     },
     "devDependencies": {
         "@types/chai": "^4.2.18",
