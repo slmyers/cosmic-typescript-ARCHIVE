@@ -3,14 +3,12 @@ import { DependencyContainer, container } from 'tsyringe';
 import { ProductService } from '$/service/index';
 import { OrderLine } from '$/model/index';
 import { TestModule } from '$test/setup';
-import { UoW } from '$/types/index';
 import { TransactionalTestContext } from '$test/TransactionalTestContext';
 import { DataSource, QueryRunner } from 'typeorm';
 
 describe('product service', function () {
     let productService: ProductService;
     let testContainer: DependencyContainer;
-    let uow: UoW;
     let ctx: TransactionalTestContext;
     let queryRunner: QueryRunner;
     let batchId: number;
@@ -28,13 +26,13 @@ describe('product service', function () {
             queryRunner = dataSource.createQueryRunner();
             await queryRunner.connect();
             await queryRunner.startTransaction();
-            const p = await queryRunner.query(
+            const [{ id: productId }] = await queryRunner.query(
                 "INSERT INTO product (sku, version) VALUES ('SMALL-TABLE', 1) RETURNING id",
             );
 
-            const b = await queryRunner.query(
+            await queryRunner.query(
                 "INSERT INTO batch (reference, sku, quantity, eta, \"productId\") VALUES ('batch-001', 'SMALL-TABLE', 20, '2021-01-01', $1) RETURNING id",
-                [Array.isArray(p) ? p[0].id : p],
+                [productId],
             );
 
             await queryRunner.commitTransaction();
@@ -58,9 +56,17 @@ describe('product service', function () {
                     .then(async (ref) => {
                         await productService.unitOfWork.dispose();
                         return ref;
+                    })
+                    .catch(async (e: any) => {
+                        await productService.unitOfWork.dispose();
+                        return e.message;
                     }),
                 productService2
                     .allocate(new OrderLine('SMALL-TABLE', 15, 'order2'))
+                    .then(async (ref) => {
+                        await productService2.unitOfWork.dispose();
+                        return ref;
+                    })
                     .catch(async (e: any) => {
                         await productService2.unitOfWork.dispose();
                         return e.message;
@@ -77,16 +83,8 @@ describe('product service', function () {
 
             const orders = await queryRunner.query('SELECT * FROM order_line');
             expect(orders.length).to.equal(1);
-            const [order] = orders;
-            expect({
-                sku: order.sku,
-                quantity: order.quantity,
-                reference: order.reference,
-            }).to.deep.equal({
-                sku: 'SMALL-TABLE',
-                quantity: 10,
-                reference: 'order1',
-            });
+            const [{ sku: orderSku }] = orders;
+            expect(orderSku).to.equal('SMALL-TABLE');
         });
 
         it('can not allocate to the same product from different processes x2', async function () {

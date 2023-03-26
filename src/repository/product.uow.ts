@@ -23,17 +23,13 @@ export class ProductUnitOfWork extends AbstractTypeormUnitOfWork {
         let result = null;
 
         try {
-            // console.log('locking product', orderLine.sku, this.id);
             const lock = await this.queryRunner.query(
                 'SELECT id, sku FROM product WHERE sku = $1 FOR UPDATE',
                 [orderLine.sku],
             );
-            // console.log(lock, this.id);
             if (lock.length !== 1) {
                 throw new Error(`Order sku ${orderLine.sku} not found`);
             }
-
-            // console.log('releasing lock', orderLine.sku, this.id);
 
             const product = await this.get(orderLine.sku);
             if (!product) {

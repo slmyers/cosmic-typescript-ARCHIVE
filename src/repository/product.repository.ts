@@ -5,7 +5,6 @@ import {
     Repository,
 } from 'typeorm';
 import {
-    allocate,
     Batch,
     IBatch,
     IOrderLine,
@@ -20,36 +19,17 @@ export class ProductRepository
     implements ProductRepo
 {
     private isPostgres: boolean;
-    private isSqlite: boolean;
 
     constructor(queryRunnner: QueryRunner) {
         super(ProductEntity, queryRunnner.manager, queryRunnner);
         this.isPostgres =
             queryRunnner.connection.driver.options.type === 'postgres';
-        this.isSqlite =
-            queryRunnner.connection.driver.options.type === 'sqlite';
 
-        if (!(this.isPostgres || this.isSqlite)) {
+        if (!this.isPostgres) {
             throw new Error(
                 `Unsupported database type: ${queryRunnner.connection.driver.options.type}`,
             );
         }
-    }
-
-    get agg(): string {
-        return this.isPostgres
-            ? 'json_agg'
-            : this.isSqlite
-            ? 'json_group_array'
-            : '';
-    }
-
-    get obj(): string {
-        return this.isPostgres
-            ? 'json_build_object'
-            : this.isSqlite
-            ? 'json_object'
-            : '';
     }
 
     async addOrderLine(
@@ -72,7 +52,7 @@ export class ProductRepository
             [orderLine.sku, orderLine.quantity, batchId, orderLine.reference],
         );
 
-        return this.isPostgres ? res[0].id : this.isSqlite ? res[0] : 0;
+        return res[0]?.id;
     }
 
     // allocate an order line to a product
@@ -129,14 +109,11 @@ export class ProductRepository
             throw new Error(`Query runner not found`);
         }
 
-        const { agg, obj } = this;
-
         const rows = await this.query(
             `
             SELECT 
                 p.id, p.sku, p.version, p.created, p.modified,
-                -- these json function are meant for sqlite will need to modify for pg
-                ${agg}(${obj}(
+                json_agg(json_build_object(
                     'id', b.id,
                     'sku', b.sku,
                     'quantity', b.quantity,
@@ -145,7 +122,7 @@ export class ProductRepository
                     'created', b.created,
                     'modified', b.modified
                 )) AS "batches",
-                ${agg}(${obj}(
+                json_agg(json_build_object(
                     'id', o.id,
                     'sku', o.sku,
                     'quantity', o.quantity,
@@ -170,13 +147,6 @@ export class ProductRepository
         }
 
         const raw = rows[0];
-
-        if (this.isSqlite) {
-            raw.batches = JSON.parse(raw.batches).filter((b: any) =>
-                Boolean(b.id),
-            );
-            raw.orderLines = JSON.parse(raw.orderLines);
-        }
 
         const batches = raw.batches.map((b: any) => {
             const orderLines = raw.orderLines

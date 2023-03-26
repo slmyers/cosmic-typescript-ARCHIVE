@@ -56,17 +56,6 @@ export class EnvironmentSingleton {
         };
     }
 
-    get sqliteEnv(): DataSourceOptions {
-        const self = EnvironmentSingleton.self(this);
-
-        return {
-            type: 'sqlite',
-            database: self.get('DB_CONNECTION_STRING'),
-            migrations: this.migrations,
-            logging: self.get('DB_LOGGING') === 'true',
-        };
-    }
-
     get nodeEnv(): string {
         return EnvironmentSingleton.self(this).get('NODE_ENV');
     }

@@ -44,6 +44,7 @@ export abstract class AbstractTypeormUnitOfWork implements UoW {
         }
         await this.queryRunner.release();
         this.state.unshift('released');
+        // console.log('releasing...', this.id);
     }
 
     async dispose() {

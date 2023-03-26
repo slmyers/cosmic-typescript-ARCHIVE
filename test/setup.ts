@@ -12,12 +12,8 @@ import { ProductUnitOfWork, ProductEntity } from '$/repository/index';
         useValue: [ProductEntity],
     },
     {
-        token: 'SqliteEntities',
-        useValue: [ProductEntity],
-    },
-    {
         token: 'env.path',
-        useValue: path.join('/mnt/e/cosmic-typescript/', 'config', 'dev.env'),
+        useValue: path.join('/mnt/e/cosmic-typescript/', 'config', 'test.env'),
     },
     {
         token: 'shared.path',

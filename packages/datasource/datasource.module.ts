@@ -3,7 +3,6 @@ import { DataSource } from 'typeorm';
 import { registry } from 'tsyringe';
 
 let PostgresDataSource: DataSource;
-let SqliteDataSource: DataSource;
 
 @registry([
     {
@@ -17,19 +16,6 @@ let SqliteDataSource: DataSource;
                 entities: dependencyContainer.resolve('PostgresEntities'),
             });
             return PostgresDataSource;
-        },
-    },
-    {
-        token: 'SqliteDataSource',
-        useFactory(dependencyContainer) {
-            if (SqliteDataSource) return SqliteDataSource;
-
-            const env = dependencyContainer.resolve(EnvironmentSingleton);
-            SqliteDataSource = new DataSource({
-                ...env.sqliteEnv,
-                entities: dependencyContainer.resolve('SqliteEntities'),
-            });
-            return SqliteDataSource;
         },
     },
 ])
