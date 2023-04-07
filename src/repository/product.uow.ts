@@ -43,16 +43,14 @@ export class ProductUnitOfWork extends AbstractTypeormUnitOfWork {
                 predictableActionArguments: true,
                 states: {
                     init: {
-                        on: {
-                            INIT: [
-                                {
-                                    target: 'seekingLock',
-                                    cond: (context: any) =>
-                                        context.pessimisticStrategy,
-                                },
-                                'allocating',
-                            ],
-                        },
+                        always: [
+                            {
+                                target: 'seekingLock',
+                                cond: (context: any) =>
+                                    context.pessimisticStrategy,
+                            },
+                            'allocating',
+                        ],
                     },
                     seekingLock: {
                         entry: 'seekingLock',
@@ -112,7 +110,6 @@ export class ProductUnitOfWork extends AbstractTypeormUnitOfWork {
         });
 
         const actor = interpret(machine).start(machine.initialState);
-        actor.send('INIT');
 
         await waitFor(actor, (state) =>
             ['allocated', 'lockFailed', 'allocationFailed'].some(state.matches),
@@ -120,36 +117,6 @@ export class ProductUnitOfWork extends AbstractTypeormUnitOfWork {
 
         return result;
     }
-
-    // async allocate(orderLine: IOrderLine): Promise<string> {
-    //     let result = null;
-
-    //     if (this.pessimisticStrategy) {
-    //         if (!(await this._lock(orderLine.sku))) {
-    //             this.lock = null;
-    //             throw new Error(`Order sku ${orderLine.sku} not found`);
-    //         }
-    //     }
-
-    //     const product = await this.get(orderLine.sku);
-    //     if (!product) {
-    //         throw new Error(`Product ${orderLine.sku} not found`);
-    //     }
-    //     const currentVersion = product.version;
-
-    //     result = await this.productRepository.allocate(product, orderLine);
-
-    //     if (result.ref) {
-    //         const [, affectedCount] = await this.queryRunner.query(
-    //             'UPDATE product SET version = $1 WHERE sku = $2 AND version = $3 RETURNING id;',
-    //             [product.version, product.sku, currentVersion],
-    //         );
-    //         if (affectedCount !== 1) {
-    //             throw new Error(`Product ${orderLine.sku} version mismatch`);
-    //         }
-    //     }
-    //     return result.ref;
-    // }
 
     async get(sku: string): Promise<IProduct> {
         return await this.productRepository.get(sku);
